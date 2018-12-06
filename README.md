@@ -1,6 +1,6 @@
 # scorenet
 
-> 曲谱网站
+> 基于vue-cli的曲谱网站框架
 
 ## Build Setup
 
