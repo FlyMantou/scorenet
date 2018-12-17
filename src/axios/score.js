@@ -15,3 +15,11 @@ export function getScore(id) {
     params: { id }
   })
 }
+
+export function getScoreData(id) {
+  return request({
+    url: 'http://yuepu.myhuanghai.com:8080/score/scoreapi/getdata',
+    method: 'get',
+    params: { id }
+  })
+}

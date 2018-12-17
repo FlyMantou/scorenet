@@ -1,7 +1,8 @@
 <template>
   <div class="score-item-conteiner" @click="openScore">
+    <a>
     <img class="score-img" :src="imgUrl"/>
-    <a>{{scoreName}}</a>
+    {{scoreName}}</a>
   </div>
 
 </template>
@@ -9,13 +10,13 @@
 <script>
     export default {
       name: "score-item",
-      props: ['img-url','score-name','score-id'],
+      props: ['img_url','score_name','score_id'],
       data() {
         return {
           getList:[],
-          imgUrl: this.img-url,
-          scoreName: this.score-name,
-          scoreId:this.score-id
+          imgUrl: this.img_url,
+          scoreName: this.score_name,
+          scoreId:this.score_id
         }
       },
       methods:{

@@ -1,8 +1,8 @@
 <template>
     <el-container class="container" direction="vertical">
-      <el-header class="header">乐谱列表展示</el-header>
+      <el-header class="header">看谱吧</el-header>
       <el-main class="main">
-        <score-item v-for="item in itemList" v-bind:key="item" class="score" :img-url="item.scoreimgurls" :score-name="item.scorename" :score-id="item.id"></score-item>
+        <score-item v-for="(item, index) in itemList" v-bind:key="index" class="score" :img_url="item.scoreimgurls" :score_name="item.scorename" :score_id="item.id"></score-item>
       </el-main>
       <el-footer class="footer">make by huanghai   1165441461@qq.com</el-footer>
     </el-container>
@@ -13,7 +13,7 @@
 import ScoreItem from "../../components/score-item";
 import {getScore, getScoreList} from "../../axios/score";
 export default {
-  name: 'HelloWorld',
+  name: 'Index',
   components: {ScoreItem},
   data () {
     return {
@@ -29,8 +29,6 @@ export default {
         this.itemList = r.data.data
       })
     },
-
-
   },
   created(){
     this.getList();
@@ -51,13 +49,13 @@ export default {
   height: auto;
 }
 .header{
-  background-color: #409EFF;
+  background-color: black;
   height: 200px;
+  color: white;
 }
 .main{
-  width: 1300px;
+  width: 1000px;
   margin: 0 auto;
-  background: chocolate;
 }
 .footer{
   background-color: black;
