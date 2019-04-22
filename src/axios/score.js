@@ -3,14 +3,14 @@ import request from '@/axios/request'
 
 export function getScoreList() {
   return request({
-    url: '/scoreapi/list',
+    url: '/score/api/list',
     method: 'get'
   })
 }
 
 export function getScore(id) {
   return request({
-    url: '/scoreapi/get',
+    url: '/score/api/get',
     method: 'get',
     params: { id }
   })
@@ -18,7 +18,7 @@ export function getScore(id) {
 
 export function getScoreData(id) {
   return request({
-    url: 'http://yuepu.myhuanghai.com:8080/score/scoreapi/getdata',
+    url: '/score/api/test',
     method: 'get',
     params: { id }
   })

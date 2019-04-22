@@ -43,7 +43,7 @@
           skipRed: false,
           pageHeight: 0,
           pageWidth: 0,
-          canvasWidth: 1280,
+          canvasWidth: 800,
           canvasHeight: 0,
           pageNum: 0,
           scale: 1
@@ -56,6 +56,8 @@
         currentMs:-1,
         currentSeqIndex:0,
         startTime:0,
+        pauseTime:0,
+        pauseWaitTime:0,
         timeSeq:[],
         timeIndex:0
       }
@@ -63,7 +65,7 @@
     computed: {
       audio_url() {
         // return encodeURI("http://yulindb.myhuanghai.com/score/水木年华+在他乡+C调+20180713/水木年华+在他乡+C调+20180713.mp3").replace(/\+/g, '%2B');
-        return encodeURI("http://yulindb.myhuanghai.com/score/比较大的大提琴/比较大的大提琴.mp3").replace(/\+/g, '%2B');
+        return encodeURI("http://yulindb.myhuanghai.com/score/千里之外/千里之外.mp3").replace(/\+/g, '%2B');
       }
     },
     watch:{
@@ -92,80 +94,32 @@
               _this.audioData.isPlay = false;
             }
             _this.timeIndex++;
-            let offset = new Date().getTime()-_this.startTime;
+            let offset = new Date().getTime()-_this.startTime-_this.pauseWaitTime;
             _this.loop(delay-offset,instance)
           }
         },x);
       },
       startLoop() {
 
-     //   this.canvasData.tempSeq = this.canvasData.noteSeq.slice();
-       // this.canvasData.tempSeq.reverse();
-       // console.log(this.canvasData.tempSeq);
-        this.startTime = new Date().getTime();
+        if (this.pauseTime!==0){
+          this.pauseWaitTime += (new Date().getTime()-this.pauseTime);
+        } else {
+          this.startTime = new Date().getTime();
+        }
+
         this.loop(0,this);
-      //  let _this = this;
-        /*let now = new Date().getTime()
-        console.log(now);
-        this.audioData.time = workerTimers.setInterval(() => {
-          // do something many times
-          let temp = new Date().getTime()
-          console.log(temp-now);
-          now = temp;
-          _this.currentMs ++;
-        }, 1);*/
-
-
-
-
-       /* let time = new Date().getTime();
-        console.log(time);
-        _this.audioData.time = setInterval(function () {
-          let temp = new Date().getTime();
-          if ((temp-time)>0){
-            _this.currentMs += temp -time;
-          }
-          time = temp;
-        },1);*/
-        /*setTimeout(function () {
-          let i=0;
-          while (i++<1000){
-            let offset = performance.now() - startTime;
-            console.log(offset)
-          }
-        },0)*/
-        /*_this.audioData.time = setInterval(function () {
-          let offset = performance.now() - startTime;
-          console.log(offset)
-          if (offset >= (0.0004699 * _this.audioData.currentTick)) {
-            _this.audioData.currentTick++;
-            console.log("tick++")
-            setTimeout(function () {
-              if (_this.canvasData.noteSeq[_this.audioData.currentTick * 256 / 960]) {
-                _this.draw(_this.audioData.currentTick)
-              }
-            }, 0)
-          }
-        }, 0)*/
         console.log("继续执行")
-
-       /* console.log("startLoop执行")
-        let _this = this;
-        _this.audioData.time = setInterval(function () {
-          _this.audioData.currentTick += 64;
-          if (_this.canvasData.noteSeq[_this.audioData.currentTick]) {
-            _this.draw(_this.audioData.currentTick)
-          }
-        }, 112);*/
-
       },
       onpause() {
         console.log("onpause执行")
-       // workerTimers.clearInterval(this.audioData.time)
+        this.pauseTime = new Date().getTime();
         this.audioData.isPlay = false;
       },
       onended() {
         console.log("onended执行")
+        this.pauseTime = 0;
+        this.startTime = 0;
+        this.pauseWaitTime = 0;
       },
       onprogress() {
         console.log("onprogress")
@@ -219,9 +173,9 @@
         return imageData;
       },
       draw(ms) {
-        //this.canvasData.ctx.clearRect(0, 0, this.canvasData.canvasWidth, this.canvasData.canvasHeight * this.canvasData.pageNum);
+        this.canvasData.ctx.clearRect(0, 0, this.canvasData.canvasWidth, this.canvasData.canvasHeight * this.canvasData.pageNum);
         for (let x = 0; x < this.canvasData.imgArr.length; x++) {
-          //this.canvasData.ctx.drawImage(this.canvasData.imgArr[x], 0, this.canvasData.canvasHeight * x, this.canvasData.canvasWidth, this.canvasData.canvasHeight);
+          this.canvasData.ctx.drawImage(this.canvasData.imgArr[x], 0, this.canvasData.canvasHeight * x, this.canvasData.canvasWidth, this.canvasData.canvasHeight);
         }
         //当前时间：cms,转换为tick公式为：cms*960/(qms*1000)
         let screenHeight = document.documentElement.clientHeight;
@@ -295,6 +249,7 @@
         }
       },
       initScorePlayer() {
+        this.scoreInfo.pngpath = "千里之外/千里之外_0001.png#千里之外/千里之外_0002.png#千里之外/千里之外_0003.png#千里之外/千里之外_0004.png#千里之外/千里之外_0005.png";
         this.canvasData.canvas = $('#canvas')[0];
         this.canvasData.ctx = this.canvasData.canvas.getContext('2d');
         const imgPathArr = [];
@@ -309,13 +264,12 @@
         this.canvasData.pageHeight = this.scoreData.pageHeight;
         this.canvasData.pageWidth = this.scoreData.pageWidth;
         this.canvasData.pageNum = this.scoreData.pageNum;
-        this.canvasData.scale = this.canvasData.pageWidth / 1280;
-        this.canvasData.canvasWidth = 1280;
+        this.canvasData.scale = this.canvasData.pageWidth / this.canvasData.canvasWidth;
         this.canvasData.canvasHeight = this.canvasData.pageHeight / this.canvasData.scale;
-        this.canvasData.canvas.width = 1280;
+        this.canvasData.canvas.width = this.canvasData.canvasWidth;
         this.canvasData.canvas.height = this.canvasData.pageHeight / this.canvasData.scale * this.canvasData.pageNum;
-        $('#canvas').css("width", "640px");
-        $('#canvas').css("height", "" + this.canvasData.pageHeight / this.canvasData.scale * this.canvasData.pageNum / 2);
+        $('#canvas').css("width", this.canvasData.canvasWidth/2+"px");
+        $('#canvas').css("height", this.canvasData.pageHeight / this.canvasData.scale * this.canvasData.pageNum / 2 + "px");
 
         for (let x = 0; x < this.scoreData.noteItemList.length; x++) {
           let item = this.scoreData.noteItemList[x];
@@ -325,8 +279,8 @@
           if (item.box) {
             obj.l = item.box.left / this.canvasData.scale;
             obj.r = item.box.right / this.canvasData.scale;
-            obj.t = item.box.top / this.canvasData.scale;
-            obj.b = item.box.bottom / this.canvasData.scale;
+            obj.t = (item.box.top+(item.page-1)*this.canvasData.pageHeight) / this.canvasData.scale;
+            obj.b = (item.box.bottom+(item.page-1)*this.canvasData.pageHeight) / this.canvasData.scale;
           }
           if (this.canvasData.noteSeq[item.ms]) {
             this.canvasData.noteSeq[item.ms].push(obj);
@@ -350,7 +304,7 @@
         let pageHeightInstance = this.canvasData.pageHeight;
         let canvasWidthInstance = this.canvasData.canvasWidth;
         let scaleInstance = this.canvasData.scale;
-        //画底图
+        //加载底图
         let currentIndex = -1;
         for (let x = 0; x < imgPathArr.length; x++) {
           let img = new Image();
@@ -372,14 +326,33 @@
           }, 500);
           img.src = imgPathArr[x];
         }
+
+        imgArrInstance.sort(this.fcompare("currentSrc"));
         console.log(imgArrInstance)
         this.draw(0);
         // this.startLoop();
+      },
+      //比较函数，用于集合根据属性值排序
+      fcompare:function(pro) {
+        return function (obj1, obj2) {
+          var val1 = obj1[pro];
+          var val2 = obj2[pro];
+          if (val1 < val2) { //正序
+            return 1;
+          } else if (val1 > val2) {
+            return -1;
+          } else {
+            return 0;
+          }
+        }
       }
+
+
+
     }
     ,
     created() {
-      this.getScoreInfo()
+      //this.getScoreInfo()
       this.getScoreData()
     }
     ,

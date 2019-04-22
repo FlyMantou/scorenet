@@ -2,7 +2,7 @@
     <el-container class="container" direction="vertical">
       <el-header class="header">看谱吧</el-header>
       <el-main class="main">
-        <score-item v-for="(item, index) in itemList" v-bind:key="index" class="score" :img_url="item.scoreimgurls" :score_name="item.scorename" :score_id="item.id"></score-item>
+        <score-item v-for="(item, index) in itemList" v-bind:key="index" class="score" :img_url="item.headimgurl" :score_name="item.name" :score_id="item.id"></score-item>
       </el-main>
       <el-footer class="footer">make by huanghai   1165441461@qq.com</el-footer>
     </el-container>
