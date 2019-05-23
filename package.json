@@ -28,7 +28,8 @@
     "vue-i18n": "7.3.2",
     "vue-router": "^3.0.1",
     "vue-worker": "^1.2.1",
-    "worker-timers": "^5.0.2"
+    "worker-timers": "^5.0.2",
+    "yuki-createjs": "0.0.3"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

@@ -2,29 +2,44 @@
 
 > 基于vue-cli的曲谱网站框架
 
-## Build Setup
-
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-
-# run unit tests
-npm run unit
-
-# run e2e tests
-npm run e2e
-
-# run all tests
-npm test
+### 使用HHScorePlayer
+```
+npm install --save yuki-createjs
+```
+```
+<template>
+  <div>
+    <HHScorePlayer :img-path-arr="imgPathArr" :audio-path="audioPath" :cursor-path="cursorPath" :player-width="playerWidth" :player-height="playerHeight" :page-per-screen="page"/>
+  </div>
+</template>
 ```
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+```
+import HHScorePlayer from "../../components/ScorePlayer/index";
+  export default {
+    name: 'ScorePlayer',
+    components: { HHScorePlayer },
+    data() {
+      return {
+        imgPathArr: [],
+        audioPath: '',
+        cursorPath: '',
+        playerWidth: 1200,
+        playerHeight: 540,
+        page: 2
+      }
+    },
+    mounted() {
+      this.imgPathArr = ['http://yulindb.myhuanghai.com/score/18/17/%E5%8D%83%E9%87%8C%E4%B9%8B%E5%A4%96_0001.png?x-oss-process=style/test1',
+        'http://yulindb.myhuanghai.com/score/18/17/%E5%8D%83%E9%87%8C%E4%B9%8B%E5%A4%96_0002.png?x-oss-process=style/test1',
+        'http://yulindb.myhuanghai.com/score/18/17/%E5%8D%83%E9%87%8C%E4%B9%8B%E5%A4%96_0003.png?x-oss-process=style/test1',
+        'http://yulindb.myhuanghai.com/score/18/17/%E5%8D%83%E9%87%8C%E4%B9%8B%E5%A4%96_0004.png?x-oss-process=style/test1',
+        'http://yulindb.myhuanghai.com/score/18/17/%E5%8D%83%E9%87%8C%E4%B9%8B%E5%A4%96_0005.png?x-oss-process=style/test1']
+      this.audioPath = 'http://yulindb.myhuanghai.com/score/18/17/%E5%8D%83%E9%87%8C%E4%B9%8B%E5%A4%96.mp3'
+      this.cursorPath = 'http://yulindb.myhuanghai.com/score/18/17/song.cur'
+    },
+    methods: {
+
+    }
+  }
+```

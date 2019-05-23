@@ -13,7 +13,7 @@ export default new Router({
     {
       path: '/score',
       name: 'Score',
-      component: () => import('@/pages/score/score'),
+      component: () => import('@/pages/player/player'),
     }
   ]
 })
