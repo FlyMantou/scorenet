@@ -1,5 +1,5 @@
-'use strict'
 module.exports = {
   NODE_ENV: '"production"',
-  BASE_API: '"http://tomcat.myhuanghai.com"'
+  ENV_CONFIG: '"prod"',
+  BASE_API: '"http://yuepu.myhuanghai.com"'
 }

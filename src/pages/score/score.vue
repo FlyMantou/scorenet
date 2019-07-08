@@ -1,5 +1,7 @@
 <template>
   <div>
+
+
     <div>
       <canvas id="canvas"></canvas>
     </div>
@@ -18,11 +20,11 @@
   import {getScore, getScoreData} from "../../axios/score";
   import $ from 'jquery'
   import AudioView from "../../components/AudioView";
-  import * as workerTimers from 'worker-timers';
+  import HHScoreController from "../../components/ScorePlayer/controller";
 
   export default {
     name: "score",
-    components: {AudioView},
+    components: {HHScoreController, AudioView},
     data() {
       return {
         scoreId: this.$route.params.id,
