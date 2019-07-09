@@ -51,6 +51,7 @@
       directionStateValue: Number,
       pagePerStateValue: Number,
       cursorStateValue: Number,
+      fullStateValue: Boolean,
     },
     data() {
       return {
@@ -68,11 +69,21 @@
         min: 0,
         inCanel: false,
         outCanel: false,
+        isOnSeek: false,
       }
     },
     watch: {
+      fullStateValue(val){
+        if (val) {
+          this.fullState = 1;
+        }else {
+          this.fullState = 0;
+        }
+      },
       currentProgress(val) {
-        this.progress = val;
+        if (!this.isOnSeek) {
+          this.progress = val;
+        }
       },
       maxProgress(val) {
         this.max = val;
@@ -90,9 +101,9 @@
       },
       playStateValue(val) {
         if (val) {
-          this.playState = 0;
-        } else {
           this.playState = 1;
+        } else {
+          this.playState = 0;
         }
       }
     },
@@ -104,6 +115,7 @@
         let width = parseInt(_this.seekWidth);
         let disX = e.clientX;
         document.onmousemove = function (e) {
+          _this.isOnSeek = true;
           // value, left, width
           // 当value变化的时候，会通过计算属性修改left，width
 
@@ -116,6 +128,7 @@
           _this.progress = Math.min(_this.progress, _this.max);
         };
         document.onmouseup = function () {
+          _this.isOnSeek = false;
           _this.$emit("onProgressChanged", _this.progress);
           document.onmousemove = document.onmouseup = null;
         };

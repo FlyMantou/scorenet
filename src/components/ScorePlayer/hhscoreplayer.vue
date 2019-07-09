@@ -8,10 +8,12 @@
         :current-progress="currentProgress"
         :max-progress="maxProgress"
         :controller-width="playerWidth"
-        :time-text-value="player.timeText"
-        :play-state-value="player.isPlay"
+        :time-text-value="timeText"
+        :play-state-value="isPlay"
         :controller-height="controllerHeight"
         :hide-state="hideState"
+        :full-state-value="fullState"
+        :direction-state-value="direction"
         @onProgressChanged="onControllerProgressChanged"
         @onPlayStateChanged="onControllerPlayStateChanged"
         @onStop="onControllerStop"
@@ -22,6 +24,9 @@
         @onMuted="onControllerMuted"
       ></HHScoreController>
     </div>
+    <!--<div class="loading">
+      <span class="loading-text">www.yunpuku.com ©copyright 云谱库</span>
+    </div>-->
 
   </div>
 </template>
@@ -73,7 +78,6 @@
   let stageHeight;
   let scoreImgWidthOnScreen;
   let scoreImgHeightOnScreen;
-  let isFull = false;
 
   /*增加横竖屏*/
   export default {
@@ -92,30 +96,23 @@
       return {
         direction: 0,
         pagePer: 2,
-        currentProgress: 50,
+        currentProgress: 0,
         maxProgress: 100,
         controllerHeight: 80,
         hideState: false,
         timeText: '00:00 / 00:00',
-        player: {
-          isLoadComplete: false,
-          isPlay: false,
-          isCursor: true,
-          showCursor: true,
-          volume: 100,
-          isFull: false
-        },
+        fullState: false,
+        isLoadComplete: false,
+        isPlay: false,
+        isCursor: true,
+        showCursor: true,
+        volume: 100,
         assets: {
           leftImgPath: leftImgImport,
           leftPressImgPath: leftPressImgImport,
           rightImgPath: rightImgImport,
           rightPressImgPath: rightPressImgImport,
           loadImgPath: loadImgImport,
-          leftImgPath1: "http://yulindb.oss-cn-beijing.aliyuncs.com/score_player/left.png?x-oss-process=style/assets_img",
-          leftPressImgPath1: "http://yulindb.oss-cn-beijing.aliyuncs.com/score_player/left_p.png?x-oss-process=style/assets_img",
-          rightImgPath1: "http://yulindb.oss-cn-beijing.aliyuncs.com/score_player/right.png?x-oss-process=style/assets_img",
-          rightPressImgPath1: "http://yulindb.oss-cn-beijing.aliyuncs.com/score_player/right_p.png?x-oss-process=style/assets_img",
-          loadImgPath1: "http://yulindb.oss-cn-beijing.aliyuncs.com/score_player/load.png?x-oss-process=style/assets_img",
         }
       }
     },
@@ -175,7 +172,7 @@
           soundInstance.volume -= 0.1
         } else if (event.keyCode === 32) { // space
           if (soundInstance) {
-            if (!_this.player.isPlay) {
+            if (!_this.isPlay) {
               _this.playAudio();
             } else {
               _this.pauseAudio();
@@ -212,11 +209,11 @@
         } else if (event.type === 'onChangePage') { // 切换页
 
         } else if (event.type === 'onAudioPlay') { // 音频开始播放
-          _this.player.isPlay = true
+          _this.isPlay = true
         } else if (event.type === 'onAudioPause') { // 音频暂停播放
-          _this.player.isPlay = false
+          _this.isPlay = false
         } else if (event.type === 'onStopPlay') { // 音频暂停播放
-          _this.player.isPlay = false;
+          _this.isPlay = false;
           _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
         } else if (event.type === 'onPlaying') { // 音频播放中
           if (soundInstance) {
@@ -225,14 +222,13 @@
         } else if (event.type === 'onEndPlay') { // 音频播放中
           console.log('事件:' + event.type + ',值:' + event.value);
           if (soundInstance) {
-            _this.player.isPlay = false
+            _this.isPlay = false
           }
         } else if (event.type === 'onExitFullScreen') { // 退出全屏
           console.log('事件:' + event.type + ',值:' + event.value);
           _this.controller.width = event.value / 2;
           _this.controller.height = 30;
-          _this.player.isFull = false;
-          isFull = false;
+          this.fullState = false;
           if (soundInstance) {
             _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
           }
@@ -240,8 +236,7 @@
           console.log('事件:' + event.type + ',值:' + event.value);
           _this.controller.width = event.value / 2;
           _this.controller.height = 30;
-          _this.player.isFull = true;
-          isFull = true;
+          this.fullState = true;
           if (soundInstance) {
             _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
           }
@@ -250,19 +245,49 @@
     },
     methods: {
       onControllerProgressChanged(progress) {
+        //progress为百分比
         console.log("onProgressChanged-->" + progress);
+        if (soundInstance) {
+          soundInstance.position = progress;
+          if (this.isPlay) {
+            if (cursorPlayer) {
+              cursorPlayer.stopPlay();
+              cursorPlayer.startPlay(soundInstance.position)
+            }
+          }
+        }
       },
       onControllerPlayStateChanged(state) {
         console.log("onPlayStateChanged-->" + state);
+        if (soundInstance) {
+          if (!this.isPlay) {
+            this.playAudio();
+          } else {
+            this.pauseAudio();
+          }
+        }
       },
       onControllerStop() {
         console.log("onStop-->");
+        this.stopPlay();
       },
       onControllerFullStateChanged(state) {
         console.log("onFullStateChanged-->" + state);
+        if (this.fullState) {
+          this.exitFullScreen();
+        } else {
+          this.openFullScreen(canvas);
+        }
       },
       onControllerDirectionStateChanged(state) {
         console.log("onDirectionStateChanged-->" + state);
+        if (this.direction === 0) {
+          this.direction = 1;
+          this.initUI();
+        } else {
+          this.direction = 0;
+          this.initUI();
+        }
       },
       onControllerPagePerStateChanged(state) {
         console.log("onPagePerStateChanged-->" + state);
@@ -272,26 +297,6 @@
       },
       onControllerMuted(state) {
         console.log("onMuted-->" + state);
-      },
-      handlePlay() {
-        console.log("handlePlay");
-        if (soundInstance) {
-          if (!this.player.isPlay) {
-            this.playAudio();
-          } else {
-            this.pauseAudio();
-          }
-        }
-      },
-      handleStop() {
-        this.stopPlay();
-      },
-      handleFullScreen() {
-        if (isFull) {
-          this.exitFullScreen();
-        } else {
-          this.openFullScreen(canvas);
-        }
       },
       handleDirectionChange() {
         if (this.direction === 0) {
@@ -316,11 +321,11 @@
         }
       },
       handleCursorChange() {
-        if (this.player.showCursor) {
-          this.player.showCursor = false;
+        if (this.showCursor) {
+          this.showCursor = false;
           this.changeCursor(1);
         } else {
-          this.player.showCursor = true;
+          this.showCursor = true;
           this.changeCursor(0);
         }
       },
@@ -374,11 +379,6 @@
           pageNum++;
           loadArr.push({src: imgArr[x], id: 'scoreImg' + x})
         }
-        loadArr.push({ src: _this.assets.leftImgPath1, id: 'left' },
-          { src: _this.assets.leftPressImgPath1, id: 'left_p' },
-          { src: _this.assets.rightImgPath1, id: 'right' },
-          { src: _this.assets.loadImgPath1, id: 'load' },
-          { src: _this.assets.rightPressImgPath1, id: 'right_p' }),
         console.log(loadArr);
         loader.loadManifest(loadArr);
       },
@@ -520,7 +520,7 @@
       },
       onFrame(event) {
         // 正在播放
-        if (this.player.isPlay) {
+        if (this.isPlay) {
           scoreCallback({type: 'onPlaying', value: soundInstance});
           this.currentProgress = soundInstance.position;
           this.maxProgress = soundInstance.duration;
@@ -542,7 +542,7 @@
           if (parseInt(event.progress * 100) === 100) {
             loadObj.hide();
           } else {
-            loadObj.update(parseInt(event.progress * 100));
+            loadObj.update("加载乐谱："+parseInt(event.progress * 100));
           }
         }
       },
@@ -569,7 +569,7 @@
           //soundInstance = createjs.Sound.play('sound', { interrupt: createjs.Sound.INTERRUPT_ANY, loop: -1 })
           //soundInstance.paused = true
         }
-        this.player.timeText = '00:00 / ' + this.formatTime(soundInstance.duration / 1000);
+        this.timeText = '00:00 / ' + this.formatTime(soundInstance.duration / 1000);
 
         soundInstance.on('complete', function (event) {
           console.log('complete-->' + event);
@@ -581,7 +581,7 @@
 
           // playContainer.getChildAt(0).visible = true;
           // playContainer.getChildAt(1).visible = false;
-          _this.player.isPlay = false
+          _this.isPlay = false
         });
         soundInstance.on('loop', function (event) {
           console.log('loop-->' + event);
@@ -619,35 +619,21 @@
         } else if (_this.direction === 1) {//垂直模式默认横向只显示1页
           scoreImgWidthOnScreen = stageWidth * (1 - ls - rs);
         }
-        /*images['left'].crossOrigin="Anonymous";
-        images['right'].crossOrigin="Anonymous";
-        images['left_p'].crossOrigin="Anonymous";
-        images['right_p'].crossOrigin="Anonymous";
-        images['load'].crossOrigin="Anonymous";*/
-        console.log(images['left']);
         // 初始化左右翻页按钮
         const leftBtn = this.createButtonSprite(this.assets.leftImgPath, this.assets.leftPressImgPath, this.assets.leftPressImgPath, 128, 128);
-        //const leftBtn = this.createButtonSprite(images['left'], images['left_p'], images['left'], 128, 128);
-
         leftBtn.addEventListener('click', function (event) {
           _this.prePage()
         });
         leftBtn.x = 0;
         leftBtn.y = (stageHeight - 64) / 2;
-
-        /*let hitAreaLeft = new createjs.Shape();
-        hitAreaLeft.graphics.beginFill("#000").drawRect(0,0,128,128);//这里是图片大小
-        leftBtn.hitArea = hitAreaLeft;*/
-
         const rightBtn = this.createButtonSprite(this.assets.rightImgPath, this.assets.rightPressImgPath, this.assets.rightPressImgPath, 128, 128)
-        //const rightBtn = this.createButtonSprite(images['right'], images['right_p'], images['right'], 128, 128);
         rightBtn.addEventListener('click', function (event) {
           _this.nextPage()
         });
         rightBtn.x = stageWidth - 128;
         rightBtn.y = (stageHeight - 64) / 2;
 
-        // 加载乐谱
+        // 加载乐谱图片
         console.log(images);
         console.log(pageNum);
         for (let x = 0; x < pageNum; x++) {
@@ -678,34 +664,31 @@
         scoreScreenContainer.addEventListener('pressup', function (event) {
           pressX = 0
         });
-        // scoreScreenContainer.addChild(createRect("#ff0000",0.5,0,0,100,100));
-
         //两边的半透明遮罩
         if (_this.direction === 0) {
           uiContainer.addChild(_this.createRect(bgColor, 0.8, 0, 0, ls * stageWidth, stageHeight));
           uiContainer.addChild(_this.createRect(bgColor, 0.8, stageWidth - ls * stageWidth, 0, ls * stageWidth, stageHeight));
 
         }
-
+        //创建弹幕UI
         barrange = this.createBarrange();
 
         uiContainer.addChild(leftBtn);
         uiContainer.addChild(rightBtn);
         uiContainer.addChild(barrange.container);
 
+        //页码显示
         const pageText = this.createText('#eeeeee', 50, '0/0', stageWidth - 100, stageHeight - 50);
         pageText.name = 'pageText';
         uiContainer.addChild(pageText);
 
-
-
+        //换页
         this.changePage(currentPage);
         cursorContainer.name = 'cursor';
         scoreContainer.addChild(cursorContainer);
 
         this.isLoadComplete = true;
         scoreCallback({type: 'onInitUiComplete', value: 0})
-
       },
       openFullScreen(element) {
         this.requestFullScreen(element)
@@ -731,7 +714,7 @@
           soundInstance.play('sound', {interrupt: createjs.Sound.INTERRUPT_ANY, loop: -1});
           //soundInstance.paused = false;
           // soundInstance.play({interrupt:Sound.INTERRUPT_ANY, loop:2, pan:0.5});
-          this.player.isPlay = true;
+          this.isPlay = true;
           if (cursorPlayer) {
             cursorPlayer.stopPlay();
             cursorPlayer.startPlay(soundInstance.position)
@@ -743,15 +726,15 @@
         if (isAudioLoadComplete) {
           if (soundInstance.position !== 0) {
             soundInstance.paused = true;
-            this.player.isPlay = false;
+            this.isPlay = false;
             soundInstance.position = 0;
             if (cursorPlayer) {
               cursorPlayer.stopPlay()
             }
-            progressBar.setProgress(0, soundInstance.duration);
-            this.gotoPage(1)
+            this.currentProgress = 0;
+            this.gotoPage(1);
             if (cursorPlayer) {
-              //cursorPlayer.drawNoteItem(0)
+              cursorPlayer.drawNoteItem(0)
             }
             scoreCallback({type: 'onStopPlay', value: soundInstance})
           }
@@ -761,7 +744,7 @@
         console.log('this.pauseAudio')
         if (isAudioLoadComplete) {
           soundInstance.paused = true
-          this.player.isPlay = false
+          this.isPlay = false
           if (cursorPlayer) {
             cursorPlayer.stopPlay()
           }
@@ -934,7 +917,7 @@
         };
 
         function caclOffsetAndStartPlay(ms) {
-          _this.player.isCursor = false
+          _this.isCursor = false
           // 转到进度，并更新光标位置
           const currentTime = ms;// 拖拽之后的当前时间点（音频文件播放的当前毫秒值）
           let offTime = 0;
@@ -947,7 +930,7 @@
               break
             }
           }
-          _this.player.isCursor = true;
+          _this.isCursor = true;
           startLoop(offTime, ms)
         }
 
@@ -957,7 +940,7 @@
          */
         function loop(x) {
           timeout = setTimeout(function () {
-            if (isCursorPlay && _this.player.isCursor) {
+            if (isCursorPlay && _this.isCursor) {
               currentMs = timeSeq[timeIndex];
               if (noteSeq[currentMs]) {
                 cursorPlayer.drawNoteItem(currentMs)
@@ -1068,7 +1051,7 @@
       createLoading(x, y) {
         const obj = {};
         obj.loadingConteiner = new createjs.Container();
-        obj.loadImgSheet = new createjs.SpriteSheet({
+        /*obj.loadImgSheet = new createjs.SpriteSheet({
           images: [this.assets.loadImgPath],
           frames: [
             [0, 0, 128, 128, 0]
@@ -1082,14 +1065,14 @@
         obj.loadImgSprite.regY = 64;
         obj.loadImgSprite.x = 64;
         obj.loadImgSprite.y = 64;
-        createjs.Tween.get(obj.loadImgSprite, {loop: true}).to({rotation: 360}, 2000);
-        obj.text = new createjs.Text('0%', '30px Arial', '#ffffff');
-        obj.text.x = 40;
-        obj.text.y = 40;
+        createjs.Tween.get(obj.loadImgSprite, {loop: true}).to({rotation: 360}, 2000);*/
+        obj.text = new createjs.Text('加载乐谱：0%', '30px Arial', '#ffffff');
+        obj.text.x = 64;
+        obj.text.y = 64;
         obj.text.textAlign = 'center';
         obj.text.textBaseline = 'middle';
         obj.text.maxWidth = 128;
-        obj.loadingConteiner.addChild(obj.loadImgSprite);
+        //obj.loadingConteiner.addChild(obj.loadImgSprite);
         obj.loadingConteiner.addChild(obj.text);
         obj.loadingConteiner.addChild(this.createRect('#ff0000', 0.01, 0, 0, 128, 128))
 
@@ -1157,68 +1140,6 @@
         t.y = y;
         t.textBaseline = 'alphabetic';
         return t
-      },
-      createProgressBar(backColor, topColor, hatColor, x, y, w, h, startprogress, duration, callback) {
-        const obj = {};
-        obj.progressContainer = new createjs.Container();
-        obj.callEvent = {};
-        obj.currentProgress = startprogress;
-        obj.duration = duration;
-
-        obj.rect1 = this.createRect(backColor, 1, 0, h / 3, w, h / 3);
-        obj.rect1.name = 'back';
-        obj.rect2 = this.createRect(topColor, 1, 0, h / 3, w - h, h / 3);
-        obj.rect2.name = 'top';
-
-        obj.rect2.scaleX = 0;
-        obj.hat = this.createCircle(null, '#ffffff', 0, h / 2, h / 2);
-        obj.hat.name = 'hat';
-        obj.hat.regX = -h / 2;
-        obj.startProgress = false;
-        obj.hat.addEventListener('mousedown', function (event) {
-          obj.startProgress = true;
-          obj.callEvent.type = 'onProgressChangeStart';
-          obj.callEvent.value = obj.currentProgress
-          callback(obj.callEvent)
-        });
-        obj.hat.addEventListener('pressup', function (event) {
-          obj.startProgress = false;
-          obj.callEvent.type = 'onProgressChangeStop';
-          obj.callEvent.value = obj.currentProgress;
-          callback(obj.callEvent)
-        });
-        obj.hat.addEventListener('pressmove', function (event) {
-          if (obj.startProgress) {
-            if (obj.hat.x >= 0 && obj.hat.x <= w - h) {
-              if (event.rawX - x < 0) {
-                obj.hat.x = 0;
-                obj.rect2.scaleX = 0
-              } else if (event.rawX - x > w - h) {
-                obj.hat.x = w - h;
-                obj.rect2.scaleX = 1
-              } else {
-                obj.hat.x = event.rawX - x;
-                obj.rect2.scaleX = obj.hat.x / (w - h)
-              }
-              obj.currentProgress = obj.rect2.scaleX * obj.duration;
-              obj.callEvent.type = 'onProgressChange';
-              obj.callEvent.value = obj.currentProgress;
-              callback(obj.callEvent)
-            }
-          }
-        });
-        obj.progressContainer.addChild(obj.rect1);
-        obj.progressContainer.addChild(obj.rect2);
-        obj.progressContainer.addChild(obj.hat);
-        obj.progressContainer.x = x;
-        obj.setProgress = function (progress, duration) {
-          obj.currentProgress = progress;
-          obj.duration = duration;
-          obj.hat.x = obj.currentProgress / obj.duration * (w - h);
-          obj.rect2.scaleX = obj.hat.x / (w - h)
-        };
-        obj.progressContainer.y = y;
-        return obj
       },
       createCircle(strokeClolor, fillColor, x, y, radius) {
         const g = new createjs.Graphics()
@@ -1432,5 +1353,16 @@
   #score-player{
     position: relative;
     overflow: hidden;
+  }
+
+  .loading{
+    position: absolute;
+    top: 0;
+  }
+  .loading-text{
+    font-size: 20px;
+    color: black;
+    font-weight: bolder;
+    font-family: "Alibaba Sans",serif;
   }
 </style>

@@ -8,13 +8,12 @@
       :player-height="playerHeight"
       :direction-state="directionTemp"
       :page-per-screen="page"/>
-    <div @click="testClick">按钮</div>
+   <!-- <div @click="testClick">按钮</div>-->
   </div>
 </template>
 
 <script>
-  import HHScorePlayer from "../../components/ScorePlayer/index";
-  //import HHScorePlayer from "hhscoreplayer";
+  import HHScorePlayer from "../../components/ScorePlayer/hhscoreplayer";
   import {getScoreById} from "../../axios/score";
 
   export default {

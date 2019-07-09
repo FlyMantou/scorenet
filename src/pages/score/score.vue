@@ -20,11 +20,10 @@
   import {getScore, getScoreData} from "../../axios/score";
   import $ from 'jquery'
   import AudioView from "../../components/AudioView";
-  import HHScoreController from "../../components/ScorePlayer/controller";
 
   export default {
     name: "score",
-    components: {HHScoreController, AudioView},
+    components: {AudioView},
     data() {
       return {
         scoreId: this.$route.params.id,
