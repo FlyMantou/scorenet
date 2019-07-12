@@ -1,19 +1,22 @@
 <template>
   <div>
     <HHScorePlayer
-      :img-path-arr="imgPathArr"
-      :audio-path="audioPath"
-      :cursor-path="cursorPath"
-      :player-width="playerWidth"
-      :player-height="playerHeight"
-      :direction-state="directionTemp"
-      :page-per-screen="page"/>
-   <!-- <div @click="testClick">按钮</div>-->
+      :img-path-prop="imgPathArr"
+      :audio-path-prop="audioPath"
+      :cursor-path-prop="cursorPath"
+      :width-prop="playerWidth"
+      :height-prop="playerHeight"
+      :direction-prop="directionTemp"
+      :page-prop="page"
+      :auto-direction-prop="autoDirection"
+    />
+    <div @click="testClick">按钮</div>
   </div>
 </template>
 
 <script>
   import HHScorePlayer from "../../components/ScorePlayer/hhscoreplayer";
+/*  import HHScorePlayer from "hhscoreplayer"*/
   import {getScoreById} from "../../axios/score";
 
   export default {
@@ -21,13 +24,14 @@
     components: { HHScorePlayer },
     data() {
       return {
-        imgPathArr: [],
-        audioPath: '',
-        cursorPath: '',
-        playerWidth: 1000,
-        playerHeight: 600,
-        directionTemp: 0,
-        page: 2
+        imgPathArr: [],//要加载的图片的地址集合，按页面顺序排序，集合大小视为乐谱页面数
+        audioPath: '',//要加载的音频地址，仅支持mp3文件
+        cursorPath: '',//要加载的光标文件地址，编码后的光标文件
+        playerWidth: 600,//自定义播放器宽度
+        playerHeight: 320,//自定义播放器高度
+        directionTemp: 0,//自定义横版还是竖版显示，只有当autoDirection为false的时候生效
+        page: 2,//自定义横版展示页面数，只有当autoDirection为false的时候生效
+        autoDirection: true,//自动根据宽高设置版式
       }
     },
     mounted() {

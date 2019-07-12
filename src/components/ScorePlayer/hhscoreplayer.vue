@@ -1,19 +1,20 @@
 <template>
   <div ref="container" id="score-player">
-    <canvas id="canvas" ref="canvas" :width="playerWidth" :height="playerHeight"
-            style="background-color: #6f7180;display: block"></canvas>
+    <canvas id="canvas" ref="canvas" ></canvas>
     <!--<canvas id="canvas" ref="canvas" width="800" height="340" style="display: block"/>-->
     <div style="position: absolute;bottom: 0">
       <HHScoreController
         :current-progress="currentProgress"
         :max-progress="maxProgress"
-        :controller-width="playerWidth"
+        :controller-width="width"
         :time-text-value="timeText"
         :play-state-value="isPlay"
         :controller-height="controllerHeight"
         :hide-state="hideState"
         :full-state-value="fullState"
         :direction-state-value="direction"
+        :page-per-state-value="pagePer"
+        :cursor-state-value="isCursor"
         @onProgressChanged="onControllerProgressChanged"
         @onPlayStateChanged="onControllerPlayStateChanged"
         @onStop="onControllerStop"
@@ -21,9 +22,18 @@
         @onDirectionStateChanged="onControllerDirectionStateChanged"
         @onPagePerStateChanged="onControllerPagePerStateChanged"
         @onCursorStateChanged="onControllerCursorStateChanged"
-        @onMuted="onControllerMuted"
       ></HHScoreController>
     </div>
+    <div ref="loading" v-show="!isLoadComplete" class="loading" :style="{width: height/4+'px',height:height/4+'px',left:(width/2-height/8)+'px',top:(height/2-height/8)+'px'}">
+      <img src="../../assets/img/load.png" style="width: 100%;height: 100%"/>
+    </div>
+    <!--<div id="btn-left" :style="{width:width/2+'px','height':height+'px',fontSize:width/8+'px',lineHeight:height+'px'}">
+      上一页
+    </div>
+
+    <div id="btn-right" :style="{width:width/2+'px',height:height+'px',left:width/2+'px',fontSize:width/8+'px',lineHeight:height+'px'}">
+      下一页
+    </div>-->
     <!--<div class="loading">
       <span class="loading-text">www.yunpuku.com ©copyright 云谱库</span>
     </div>-->
@@ -38,37 +48,33 @@
   import leftPressImgImport from '@/assets/img/left_p.png'
   import rightImgImport from '@/assets/img/right.png'
   import rightPressImgImport from '@/assets/img/right_p.png'
-  import loadImgImport from '@/assets/img/load.png'
   import HHScoreController from "../../components/ScorePlayer/controller";
   import $ from 'jquery'
   /* 配置常量*/
-  const controllerHeight = 10;
   let ls = 0.1;
   let rs = 0.1;
   const cs = 0.02;
   const bgColor = '#333333';
   /* 配置变量*/
   let isChangePage = false;
-  let isChangeController = false;
-  let isControllerShow = true;
   let isAudioLoadComplete = false;
   /* 实例变量*/
   let canvas;
-  let stage;
-  let soundInstance;
-  let loadObj;
+  let stage = null;
+  let soundInstance = null;
+  let loadObj = null;
   let images = {};
   const bitmapArr = [];
   const noteSeq = [];
   let scoredata;
   let scoreCallback;
   let barrange;
-  let uiContainer;
-  let scoreContainer;
-  let scoreScreenContainer;
-  let playContainer;
-  let cursorContainer;
-  let cursorPlayer;
+  let uiContainer = null;
+  let scoreContainer = null;
+  let scoreScreenContainer = null;
+  let playContainer = null;
+  let cursorContainer = null;
+  let cursorPlayer = null;
   /* 逻辑变量*/
   let currentPage = 1;
   let pageNum = 0;
@@ -84,18 +90,21 @@
     name: 'HHScorePlayer',
     components: {HHScoreController},
     props: {
-      imgPathArr: Array,
-      audioPath: String,
-      cursorPath: String,
-      playerWidth: Number,
-      playerHeight: Number,
-      pagePerScreen: Number,
-      directionState: Number,
+      imgPathProp: Array,
+      audioPathProp: String,
+      cursorPathProp: String,
+      widthProp: Number,
+      heightProp: Number,
+      pageProp: Number,
+      directionProp: Number,
+      autoDirectionProp: Boolean,
     },
     data() {
       return {
-        direction: 0,
-        pagePer: 2,
+        width: this.widthProp,
+        height: this.heightProp,
+        direction: this.directionProp,
+        pagePer: this.pageProp,
         currentProgress: 0,
         maxProgress: 100,
         controllerHeight: 80,
@@ -105,60 +114,70 @@
         isLoadComplete: false,
         isPlay: false,
         isCursor: true,
-        showCursor: true,
         volume: 100,
         assets: {
           leftImgPath: leftImgImport,
           leftPressImgPath: leftPressImgImport,
           rightImgPath: rightImgImport,
           rightPressImgPath: rightPressImgImport,
-          loadImgPath: loadImgImport,
         }
       }
     },
     watch: {
-      directionState(val) {
-        //监听方向改变
-        if (val !== 0 && val !== 1) {
-          val = 0;
-        }
-        this.direction = val;
-        this.initUI();
-      },
-      playerWidth(val) {
-        console.log('watch:playerWidth-->' + val);
-        this.controller.width = val;
-      },
-      playerHeight(val) {
-        console.log('watch:playerHeight-->' + val);
-        this.controller.height = val;
-      },
-      pagePerScreen(val) {
-        console.log('watch:pagePerScreen-->' + val);
-        this.pagePer = val;
+      autoDirectionProp(val){
+        this.autoDirectionProp = val;
+        console.log("watch-->autoDirectionProp");
+        this.checkAutoDirection();
         if (this.isLoadComplete) {
           this.initUI();
         }
       },
-      imgPathArr(val) {
-        console.log('watch:imgPathArr-->' + val);
+      widthProp(val){
+        console.log("watch-->widthProp");
+        this.width = val;
+      },
+      heightProp(val){
+        console.log("watch-->heightProp");
+        this.height  =val;
+      },
+      directionProp(val) {
+        console.log("watch-->directionProp");
+        //监听方向改变
+        if (val !== 0 && val !== 1) {
+          val = 0;
+        }
+        this.directionProp = val;
+        if (this.isLoadComplete) {
+          this.initUI();
+        }
+      },
+      pageProp(val) {
+        console.log('watch:pageProp-->' + val);
+        this.pageProp = val;
+        if (this.isLoadComplete) {
+          this.initUI();
+        }
+      },
+      imgPathProp(val) {
+        console.log('watch:imgPathProp-->' + val);
         // TODO 监听图片路径改变
-        this.imgPathArr = val;
+        this.imgPathProp = val;
         this.loadImageResource();
       },
-      audioPath(val) {
+      audioPathProp(val) {
         console.log('watch:audioPath-->' + val);
         // TODO 监听音频路径改变
-        this.audioPath = val;
+        this.audioPathProp = val;
         this.loadMp3Resource();
       },
-      cursorPath(val) {
+      cursorPathProp(val) {
         console.log('watch:cursorpath-->' + val);
-        this.cursorPath = val;
+        this.cursorPathProp = val;
         this.loadCursorResource();
       }
     },
     mounted() {
+      console.log("生命周期-->mounted");
       const _this = this;
       canvas = this.$refs.canvas;
       document.onkeydown = function (event) {
@@ -181,67 +200,43 @@
         }
       };
       $(this.$refs.container).mouseenter(function () {
-        console.log("hover1");
         _this.hideState = false;
       });
       $(this.$refs.container).mouseleave(function () {
-        console.log("hover2");
         _this.hideState = true;
       });
-
-      this.initPlayer(function (event) {
-        if (event.type === 'onImgLoadProgress') { // 乐谱图片加载进度
-          const progress = event.value * 100;
-        } else if (event.type === 'onImgLoadComplete') { // 乐谱图片加载完成
-
-        } else if (event.type === 'onAudioLoadProgress') { // 音频加载进度
-          const progress = parseInt(event.value * 100);
-          _this.timeText = ('正在加载音频，请稍后，当前进度：' + progress + '%');
-        } else if (event.type === 'onAudioLoadComplete') { // 音频加载完成
-          soundInstance = event.value;
-          _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
-        } else if (event.type === 'onInitUiComplete') { // 初始化UI完成
-
-        } else if (event.type === 'onNextPage') { // 下一页
-
-        } else if (event.type === 'onPrePage') { // 上一页
-
-        } else if (event.type === 'onChangePage') { // 切换页
-
-        } else if (event.type === 'onAudioPlay') { // 音频开始播放
-          _this.isPlay = true
-        } else if (event.type === 'onAudioPause') { // 音频暂停播放
-          _this.isPlay = false
-        } else if (event.type === 'onStopPlay') { // 音频暂停播放
-          _this.isPlay = false;
-          _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
-        } else if (event.type === 'onPlaying') { // 音频播放中
-          if (soundInstance) {
-            _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
+      //监听全屏与退出全屏事件
+      window.onresize = function () {
+        if (!_this.checkFull()) {//非全屏
+          //console.log("_this.fullState-->" + _this.fullState);
+          if (_this.fullState) {
+            //退出全屏
+            console.log("退出全屏:widthProp-->"+_this.widthProp);
+            _this.fullState = false;
+            _this.width = _this.widthProp;
+            _this.height = _this.heightProp;
+            _this.postInit();
+            if (_this.isLoadComplete) {
+              _this.initUI();
+            }
           }
-        } else if (event.type === 'onEndPlay') { // 音频播放中
-          console.log('事件:' + event.type + ',值:' + event.value);
-          if (soundInstance) {
-            _this.isPlay = false
-          }
-        } else if (event.type === 'onExitFullScreen') { // 退出全屏
-          console.log('事件:' + event.type + ',值:' + event.value);
-          _this.controller.width = event.value / 2;
-          _this.controller.height = 30;
-          this.fullState = false;
-          if (soundInstance) {
-            _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
-          }
-        } else if (event.type === 'onOpenFullScreen') { // 打开全屏
-          console.log('事件:' + event.type + ',值:' + event.value);
-          _this.controller.width = event.value / 2;
-          _this.controller.height = 30;
-          this.fullState = true;
-          if (soundInstance) {
-            _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
+        } else {
+          if (!_this.fullState) {
+            //进入全屏
+            console.log("进入全屏");
+            _this.fullState = true;
+            _this.width = screen.width;
+            _this.height = screen.height;
+            _this.postInit();
+            if (_this.isLoadComplete) {
+              _this.initUI();
+            }
+
           }
         }
-      })
+      };
+      _this.postInit();
+
     },
     methods: {
       onControllerProgressChanged(progress) {
@@ -276,7 +271,7 @@
         if (this.fullState) {
           this.exitFullScreen();
         } else {
-          this.openFullScreen(canvas);
+          this.openFullScreen(this.$refs.container);
         }
       },
       onControllerDirectionStateChanged(state) {
@@ -291,23 +286,6 @@
       },
       onControllerPagePerStateChanged(state) {
         console.log("onPagePerStateChanged-->" + state);
-      },
-      onControllerCursorStateChanged(state) {
-        console.log("onCursorStateChanged-->" + state);
-      },
-      onControllerMuted(state) {
-        console.log("onMuted-->" + state);
-      },
-      handleDirectionChange() {
-        if (this.direction === 0) {
-          this.direction = 1;
-          this.initUI();
-        } else {
-          this.direction = 0;
-          this.initUI();
-        }
-      },
-      handlePagePerChange() {
         this.direction = 0;
         if (this.pagePer === 1) {
           this.pagePer = 2;
@@ -320,38 +298,114 @@
           this.initUI();
         }
       },
-      handleCursorChange() {
-        if (this.showCursor) {
-          this.showCursor = false;
+      onControllerCursorStateChanged(state) {
+        console.log("onCursorStateChanged-->" + state);
+        if (this.isCursor) {
+          this.isCursor = false;
           this.changeCursor(1);
         } else {
-          this.showCursor = true;
+          this.isCursor = true;
           this.changeCursor(0);
         }
       },
-      handleVolumeChange() {
+      checkAutoDirection(){
+        if (this.autoDirectionProp) {
+          if (this.width <= 800){
+            this.direction = 1;
+          } else if (this.width <= this.height) {
+            this.direction = 1;
+          }else {
+            this.direction = 0;
+          }
+          if (this.direction === 0){
+            let k = this.width/this.height;
+            if (k < 1.4) {
+              this.pagePer = 1;
+            }if (k < 2.1) {
+              this.pagePer = 2;
+            }else {
+              this.pagePer = 3;
+            }
+          }
+        }
+      },
+      postInit(){
+        let _this = this;
+        //判断是否需要自动适应
+        _this.checkAutoDirection();
+        _this.initPlayer(function (event) {
+          if (event.type === 'onImgLoadProgress') { // 乐谱图片加载进度
+            const progress = event.value * 100;
+          } else if (event.type === 'onImgLoadComplete') { // 乐谱图片加载完成
 
+          } else if (event.type === 'onAudioLoadComplete') { // 音频加载完成
+            soundInstance = event.value;
+            _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
+          } else if (event.type === 'onInitUiComplete') { // 初始化UI完成
+
+          } else if (event.type === 'onNextPage') { // 下一页
+
+          } else if (event.type === 'onPrePage') { // 上一页
+
+          } else if (event.type === 'onChangePage') { // 切换页
+
+          } else if (event.type === 'onAudioPlay') { // 音频开始播放
+            _this.isPlay = true
+          } else if (event.type === 'onAudioPause') { // 音频暂停播放
+            _this.isPlay = false
+          } else if (event.type === 'onStopPlay') { // 音频暂停播放
+            _this.isPlay = false;
+            _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
+          } else if (event.type === 'onPlaying') { // 音频播放中
+            if (soundInstance) {
+              _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
+            }
+          } else if (event.type === 'onEndPlay') { // 音频播放结束
+            if (soundInstance) {
+              _this.isPlay = false
+            }
+          } else if (event.type === 'onExitFullScreen') { // 退出全屏
+            this.fullState = false;
+            if (soundInstance) {
+              _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
+            }
+          } else if (event.type === 'onOpenFullScreen') { // 打开全屏
+            this.hideState = false;
+            this.fullState = true;
+            if (soundInstance) {
+              _this.timeText = (_this.formatTime(soundInstance.position / 1000) + ' / ' + _this.formatTime(soundInstance.duration / 1000));
+            }
+          }
+        })
+      },
+      resetPlayer(){
+        if (canvas != null) {
+          canvas.width = this.width;
+          canvas.height = this.height;
+        }
       },
       initPlayer(callback) {
-        let _this = this;
-        console.log('initPlayer');
+        this.resetPlayer();
         scoreCallback = callback;
         initStageWidth = canvas.width * 2;
         initStageHeight = canvas.height * 2;
         stageWidth = initStageWidth;
         stageHeight = initStageHeight;
-        stage = new createjs.Stage(canvas);
-        scoreContainer = new createjs.Container();
-        uiContainer = new createjs.Container();
-        playContainer = new createjs.Container();
-        cursorContainer = new createjs.Container();
-        scoreScreenContainer = new createjs.Container();
-        scoreScreenContainer.addChild(scoreContainer);
-        stage.addChild(scoreScreenContainer);
-        stage.addChild(uiContainer);
-        loadObj = this.createLoading((stageWidth - 256) / 4, (stageHeight - 256) / 4);
-        stage.addChild(loadObj.loadingConteiner);
-        loadObj.show();
+        if (stage===null)
+          stage = new createjs.Stage(canvas);
+        if (scoreContainer===null)
+          scoreContainer = new createjs.Container();
+        if (uiContainer === null)
+          uiContainer = new createjs.Container();
+        if (playContainer === null)
+          playContainer = new createjs.Container();
+        if (cursorContainer === null)
+          cursorContainer = new createjs.Container();
+        if (scoreScreenContainer === null)
+          scoreScreenContainer = new createjs.Container();
+        if (loadObj===null)
+          loadObj = this.createLoading((stageWidth ) / 4, (stageHeight) / 4);
+
         createjs.Touch.enable(stage);
         createjs.Ticker.framerate = 60;
         createjs.Ticker.addEventListener('tick', this.onFrame)
@@ -361,14 +415,14 @@
       },
       loadImageResource() {
         let _this = this;
-        if (!_this.imgPathArr) {
+        if (!_this.imgPathProp) {
           return;
         }
         _this.isLoadComplete = false;
         pageNum = 0;
         currentPage = 1;
         console.log('loadImageResource');
-        const imgArr = this.imgPathArr;
+        const imgArr = _this.imgPathProp;
         const loader = new createjs.LoadQueue(false);// 这里一共可以是3个参数 第一个是是否用XHR模式加载 第二个是基础路径  第三个是跨域
         loader.addEventListener('fileload', _this.onImgFileLoad);
         loader.addEventListener('progress', _this.onImgLoadProgress);
@@ -383,29 +437,25 @@
         loader.loadManifest(loadArr);
       },
       loadMp3Resource() {
-        console.log(createjs.Sound);
-        if (!this.audioPath) {
+        //console.log(createjs.Sound);
+        if (!this.audioPathProp) {
           return
         }
         console.log('loadMp3Resource');
-        const audioPath = this.audioPath;
-        if (audioPath) {
-          createjs.Sound.registerPlugins([createjs.HTMLAudioPlugin]);
-          createjs.Sound.alternateExtensions = ['mp3'];
-          createjs.Sound.on('fileload', this.onAudioLoadComplete);
-          createjs.Sound.on('progress', this.onAudioLoadProgress);
-
-          createjs.Sound.registerSound(audioPath, 'sound', 3);
-        }
+        const audioPath = this.audioPathProp;
+        createjs.Sound.registerPlugins([createjs.HTMLAudioPlugin]);
+        createjs.Sound.alternateExtensions = ['mp3'];
+        createjs.Sound.on('fileload', this.onAudioLoadComplete);
+        createjs.Sound.registerSound(audioPath, 'sound', 3);
       },
       loadCursorResource() {
-        if (!this.cursorPath) {
+        if (!this.cursorPathProp) {
           return;
         }
         console.log('loadCursorResource');
         const _this = this;
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', this.cursorPath, true);
+        xhr.open('GET', this.cursorPathProp, true);
         xhr.responseType = 'blob';
         xhr.onload = function () {
           if (this.status === 200) {
@@ -533,7 +583,7 @@
         if (evt.item.type === 'image') {
           images[evt.item.id] = evt.result;
         }
-        console.log("evt.item-->"+evt.item);
+        //console.log("evt.item-->" + evt.item);
         // 这是单个文件加载完成的事件，把它保存到一个地方之后可以直接拿来创建对象
       },
       onImgLoadProgress(event) {
@@ -542,14 +592,9 @@
           if (parseInt(event.progress * 100) === 100) {
             loadObj.hide();
           } else {
-            loadObj.update("加载乐谱："+parseInt(event.progress * 100));
+            loadObj.update("加载乐谱：" + parseInt(event.progress * 100));
           }
         }
-      },
-      onAudioLoadProgress(event) {
-        scoreCallback({type: 'onAudioLoadProgress', value: event.progress});
-        const pro = parseInt(event.progress * 100);
-        this.timeText = 'load audio:' + pro + '%';
       },
       onImgLoadComplete(event) {
         scoreCallback({type: 'onImgLoadComplete', value: event});
@@ -562,6 +607,8 @@
       },
       onAudioLoadComplete(event) {
         const _this = this;
+        createjs.Sound.removeEventListener("progress",this.onAudioLoadProgress);
+        createjs.Sound.removeEventListener("fileload",this.onAudioLoadComplete);
         // event.currentTarget.removeEventListener("complete", onAudioLoadComplete);
         isAudioLoadComplete = true;
         if (soundInstance == null) {
@@ -594,6 +641,14 @@
       },
       resetUI() {
         ls = rs = 0.1;
+        scoreScreenContainer.removeAllChildren();
+        scoreScreenContainer.removeAllEventListeners();
+        scoreScreenContainer.addChild(scoreContainer);
+        stage.removeAllChildren();
+        stage.removeAllEventListeners();
+        stage.addChild(scoreScreenContainer);
+        stage.addChild(uiContainer);
+        stage.addChild(loadObj.loadingConteiner);
         scoreContainer.removeAllChildren();
         uiContainer.removeAllChildren();
         playContainer.removeAllChildren();
@@ -608,7 +663,7 @@
       initUI() {
         const _this = this;
         this.resetUI();
-        console.log('initUI');
+        console.log('initUI-->'+stage);
         canvas.width = stageWidth;
         canvas.height = stageHeight;
         canvas.style.width = stageWidth / 2 + 'px';
@@ -634,8 +689,8 @@
         rightBtn.y = (stageHeight - 64) / 2;
 
         // 加载乐谱图片
-        console.log(images);
-        console.log(pageNum);
+        //console.log(images);
+        //console.log(pageNum);
         for (let x = 0; x < pageNum; x++) {
           this.putScoreToStage(x + 1, images['scoreImg' + x])
         }
@@ -802,15 +857,17 @@
             createjs.Tween.get(scoreContainer).to({x: -(page - 1) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
               isChangePage = false
               currentPage = page
-              scoreCallback({type: 'onChangePage', value: currentPage})
-              uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              scoreCallback({type: 'onChangePage', value: currentPage});
+              if (uiContainer !== null)
+                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
             });
           } else if (this.direction === 1) {
             createjs.Tween.get(scoreContainer).to({y: -(page - 1) * scoreImgHeightOnScreen}, 500).call(function () {
               isChangePage = false
               currentPage = page
-              scoreCallback({type: 'onChangePage', value: currentPage})
-              uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              scoreCallback({type: 'onChangePage', value: currentPage});
+              if (uiContainer !== null)
+                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
             });
           }
 
@@ -861,28 +918,28 @@
       },
       initScoreCursor() {
         for (let x = 0; x < scoredata.noteItemList.length; x++) {
-          const item = scoredata.noteItemList[x]
-          const obj = {}
-          obj.staff = item.staff
-          obj.ms = item.ms
-          obj.page = item.page
+          const item = scoredata.noteItemList[x];
+          const obj = {};
+          obj.staff = item.staff;
+          obj.ms = item.ms;
+          obj.page = item.page;
           if (item.box) {
-            obj.l = item.box.left
-            obj.r = item.box.right
-            obj.t = item.box.top
+            obj.l = item.box.left;
+            obj.r = item.box.right;
+            obj.t = item.box.top;
             obj.b = item.box.bottom
           }
 
           if (noteSeq[item.ms]) {
             noteSeq[item.ms].push(obj)
           } else {
-            const arr = []
-            arr.push(obj)
+            const arr = [];
+            arr.push(obj);
             noteSeq[item.ms] = arr
           }
         }
 
-        const timeSeq = []
+        const timeSeq = [];
 
         // 记录时间线：
         for (let x = 0; x < noteSeq.length; x++) {
@@ -1087,7 +1144,6 @@
           obj.text.text = value + '%';
           obj.text.x = 64;
           obj.text.y = 64;
-          console.log('text-->' + obj.text.textAlign)
         };
         obj.loadingConteiner.x = x;
         obj.loadingConteiner.y = y;
@@ -1282,87 +1338,86 @@
           console.log('不支持全屏模式！')
         }
       },
-      initVolumeController(callback) {
-        const obj = {}
-        obj.value = 0
-        let tag = false, dy = 0, bottom = 0, bgbottom = 0
-        $('.vo-progress_btn').mousedown(function (e) {
-          dy = -e.pageY - bottom
-          tag = true
-        })
-        $(document).mouseup(function (e) {
-          console.log('mouseup')
-          tag = false
-        })
-        $(document).mousemove(function (e) { // 鼠标移动
-          if (tag) {
-            bottom = -e.pageY - dy
-            console.log('bottom-->' + bottom)
-            console.log('dy-->' + dy)
-            console.log('e.pageY-->' + e.pageY)
-            if (bottom <= 0) {
-              bottom = 0
-            } else if (bottom > 70) {
-              bottom = 70
-            }
-            $('.vo-progress_btn').css('bottom', bottom)
-            $('.vo-progress_bar').height(bottom)
-            obj.value = bottom / 70
-            callback({value: bottom / 70})
-          }
-        })
-        $('.volume-controller').click(function (e) { // 鼠标点击
-          console.log('click')
-          if (!tag) {
-            bgbottom = $('.vo-progress_bg').offset().top
-            console.log('bgbottom-->' + bgbottom)
-            console.log('e.pageY-->' + e.pageY)
-            bottom = 74 - (e.pageY - bgbottom)
-            if (bottom <= 0) {
-              bottom = 0
-            } else if (bottom > 70) {
-              bottom = 70
-            }
-            console.log('click-->' + bottom)
-            $('.vo-progress_btn').css('bottom', bottom)
-            $('.vo-progress_bar').height(bottom)
-            obj.value = bottom / 70
-            callback({value: bottom / 70})
-          }
-        })
-        obj.setValue = function (value) {
-          bottom = 70 * value
-          obj.value = value
-          $('.vo-progress_btn').css('bottom', 70 * value);
-          $('.vo-progress_bar').height(70 * value)
-        };
-
-        return obj
+      // get~ 销毁组件
+      destroyElement() {
+        this.$destroy(true);
+        this.$el.parentNode.removeChild(this.$el);
       },
     },
+    deactivated(){
+      console.log("生命周期-->deactivated");
+      this.destroyElement();
+    },
     beforeDestroy() {
+      console.log("生命周期-->beforeDestroy");
       this.stopPlay();
+      createjs.Sound.removeAllSounds();
+      stage = null;
+      uiContainer = null;
+      scoreContainer = null;
+      scoreScreenContainer = null;
+      playContainer = null;
+      cursorContainer = null;
+      cursorPlayer = null;
+      isChangePage = false;
+      isAudioLoadComplete = false;
+      /* 实例变量*/
+      canvas = null;
+      stage = null;
+      soundInstance = null;
+      loadObj = null;
+      images = {};
       //createjs.Sound.removeAllSounds();
-      createjs.Ticker.removeEventListener("click");
+      createjs.Ticker.removeEventListener("tick",this.onFrame);
     }
   }
 </script>
 
 <style scoped>
 
-  #score-player{
+  canvas{
+    background-color: #6f7180;
+    display: block;
+  }
+  #score-player {
     position: relative;
     overflow: hidden;
   }
 
-  .loading{
+  #btn-left{
+    color: white;
     position: absolute;
+    display: block;
     top: 0;
+    background-color: black;
+    opacity: 0;
   }
-  .loading-text{
+  #btn-left:hover{
+    opacity: 0.1;
+  }
+
+  #btn-right{
+    color: white;
+    position: absolute;
+    background-color: black;
+    display: block;
+    top: 0;
+    opacity: 0;
+  }
+  #btn-right:hover{
+    opacity: 0.1;
+  }
+
+  .loading {
+    display: block;
+    position: absolute;
+  }
+
+
+  .loading-text {
     font-size: 20px;
     color: black;
     font-weight: bolder;
-    font-family: "Alibaba Sans",serif;
+    font-family: "Alibaba Sans", serif;
   }
 </style>
