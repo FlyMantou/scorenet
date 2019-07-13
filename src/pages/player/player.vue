@@ -36,7 +36,15 @@
     },
     mounted() {
       console.log(this.$route.params.id)
-     // if (this.$route.params.id) {
+      this.getData();
+    },
+    methods: {
+      initScorePlayerData(pngFiles,audioPath,cursorPath) {
+        this.imgPathArr = pngFiles;
+        this.audioPath = audioPath;
+        this.cursorPath = cursorPath
+      },
+      getData(){
         getScoreById(this.$route.params.id).then(response => {
           console.log(response)
           const files = response.data.data.assets[0].files
@@ -56,17 +64,11 @@
           pngFiles.sort()
           this.initScorePlayerData(pngFiles, audioPath, cursorPath)
         })
-     // }
-    },
-    methods: {
-      initScorePlayerData(pngFiles,audioPath,cursorPath) {
-        this.imgPathArr = pngFiles;
-        this.audioPath = audioPath;
-        this.cursorPath = cursorPath
       },
       testClick(){
         console.log("testClick");
-        this.$router.push({name:'Index'});
+        //this.$router.push({name:'Index'});
+        this.getData();
       }
     }
   }

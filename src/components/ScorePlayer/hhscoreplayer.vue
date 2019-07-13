@@ -1,7 +1,6 @@
 <template>
-  <div ref="container" id="score-player">
+  <div ref="container" id="score-player" :style="{width:width+'px', height:height+'px'}">
     <canvas id="canvas" ref="canvas" ></canvas>
-    <!--<canvas id="canvas" ref="canvas" width="800" height="340" style="display: block"/>-->
     <div style="position: absolute;bottom: 0">
       <HHScoreController
         :current-progress="currentProgress"
@@ -27,17 +26,6 @@
     <div ref="loading" v-show="!isLoadComplete" class="loading" :style="{width: height/4+'px',height:height/4+'px',left:(width/2-height/8)+'px',top:(height/2-height/8)+'px'}">
       <img src="../../assets/img/load.png" style="width: 100%;height: 100%"/>
     </div>
-    <!--<div id="btn-left" :style="{width:width/2+'px','height':height+'px',fontSize:width/8+'px',lineHeight:height+'px'}">
-      上一页
-    </div>
-
-    <div id="btn-right" :style="{width:width/2+'px',height:height+'px',left:width/2+'px',fontSize:width/8+'px',lineHeight:height+'px'}">
-      下一页
-    </div>-->
-    <!--<div class="loading">
-      <span class="loading-text">www.yunpuku.com ©copyright 云谱库</span>
-    </div>-->
-
   </div>
 </template>
 
@@ -66,6 +54,7 @@
   let images = {};
   const bitmapArr = [];
   const noteSeq = [];
+  const measureSeq = [];
   let scoredata;
   let scoreCallback;
   let barrange;
@@ -115,6 +104,10 @@
         isPlay: false,
         isCursor: true,
         volume: 100,
+        imgLoadLock: false,
+        audioLoadLock: false,
+        cursorLoadLock: false,
+        mountLock: false,
         assets: {
           leftImgPath: leftImgImport,
           leftPressImgPath: leftPressImgImport,
@@ -161,81 +154,98 @@
       imgPathProp(val) {
         console.log('watch:imgPathProp-->' + val);
         // TODO 监听图片路径改变
-        this.imgPathProp = val;
-        this.loadImageResource();
+        if (!this.imgLoadLock) {
+          this.imgPathProp = val;
+          this.loadImageResource();
+        }
       },
       audioPathProp(val) {
         console.log('watch:audioPath-->' + val);
         // TODO 监听音频路径改变
-        this.audioPathProp = val;
-        this.loadMp3Resource();
+        if (!this.audioLoadLock) {
+          this.audioPathProp = val;
+          this.loadMp3Resource();
+        }
       },
       cursorPathProp(val) {
         console.log('watch:cursorpath-->' + val);
-        this.cursorPathProp = val;
-        this.loadCursorResource();
+        if (!this.cursorLoadLock) {
+          this.cursorPathProp = val;
+          this.loadCursorResource();
+        }
       }
     },
+    beforeCreate(){
+      console.log("生命周期-->beforeCreate");
+    },
+    beforeMount(){
+      console.log("生命周期-->beforeMount");
+    },
     mounted() {
-      console.log("生命周期-->mounted");
-      const _this = this;
-      canvas = this.$refs.canvas;
-      document.onkeydown = function (event) {
-        if (event.keyCode === 37) { // left
-          _this.prePage()
-        } else if (event.keyCode === 39) { // right
-          _this.nextPage()
-        } else if (event.keyCode === 38) { // up
-          soundInstance.volume += 0.1
-        } else if (event.keyCode === 40) { // down
-          soundInstance.volume -= 0.1
-        } else if (event.keyCode === 32) { // space
-          if (soundInstance) {
-            if (!_this.isPlay) {
-              _this.playAudio();
-            } else {
-              _this.pauseAudio();
+      if (!this.mountLock) {
+        this.mountLock = true;
+        console.log("生命周期-->mounted");
+        const _this = this;
+        canvas = this.$refs.canvas;
+        document.onkeydown = function (event) {
+          if (event.keyCode === 37) { // left
+            _this.prePage()
+          } else if (event.keyCode === 39) { // right
+            _this.nextPage()
+          } else if (event.keyCode === 38) { // up
+            soundInstance.volume += 0.1
+          } else if (event.keyCode === 40) { // down
+            soundInstance.volume -= 0.1
+          } else if (event.keyCode === 32) { // space
+            if (soundInstance) {
+              if (!_this.isPlay) {
+                _this.playAudio();
+              } else {
+                _this.pauseAudio();
+              }
             }
           }
-        }
-      };
-      $(this.$refs.container).mouseenter(function () {
-        _this.hideState = false;
-      });
-      $(this.$refs.container).mouseleave(function () {
-        _this.hideState = true;
-      });
-      //监听全屏与退出全屏事件
-      window.onresize = function () {
-        if (!_this.checkFull()) {//非全屏
-          //console.log("_this.fullState-->" + _this.fullState);
-          if (_this.fullState) {
-            //退出全屏
-            console.log("退出全屏:widthProp-->"+_this.widthProp);
-            _this.fullState = false;
-            _this.width = _this.widthProp;
-            _this.height = _this.heightProp;
-            _this.postInit();
-            if (_this.isLoadComplete) {
-              _this.initUI();
+        };
+        $(this.$refs.container).mouseenter(function () {
+          _this.hideState = false;
+        });
+        $(this.$refs.container).mouseleave(function () {
+          _this.hideState = true;
+        });
+        //监听全屏与退出全屏事件
+        window.onresize = function () {
+          if (!_this.checkFull()) {//非全屏
+            //console.log("_this.fullState-->" + _this.fullState);
+            if (_this.fullState) {
+              //退出全屏
+              console.log("退出全屏:widthProp-->"+_this.widthProp);
+              _this.fullState = false;
+              _this.width = _this.widthProp;
+              _this.height = _this.heightProp;
+              _this.postInit();
+              if (_this.isLoadComplete) {
+                _this.initUI();
+              }
             }
-          }
-        } else {
-          if (!_this.fullState) {
-            //进入全屏
-            console.log("进入全屏");
-            _this.fullState = true;
-            _this.width = screen.width;
-            _this.height = screen.height;
-            _this.postInit();
-            if (_this.isLoadComplete) {
-              _this.initUI();
-            }
+          } else {
+            if (!_this.fullState) {
+              //进入全屏
+              console.log("进入全屏");
+              _this.fullState = true;
+              _this.width = screen.width;
+              _this.height = screen.height;
+              _this.postInit();
+              if (_this.isLoadComplete) {
+                _this.initUI();
+              }
 
+            }
           }
-        }
-      };
-      _this.postInit();
+        };
+        _this.postInit();
+        this.mountLock = false;
+      }
+
 
     },
     methods: {
@@ -244,10 +254,15 @@
         console.log("onProgressChanged-->" + progress);
         if (soundInstance) {
           soundInstance.position = progress;
+          this.timeText = (this.formatTime(progress / 1000) + ' / ' + this.formatTime(soundInstance.duration / 1000));
+          if (cursorPlayer) {
+            //跳转页面
+            cursorPlayer.gotoMs(progress);
+          }
           if (this.isPlay) {
             if (cursorPlayer) {
               cursorPlayer.stopPlay();
-              cursorPlayer.startPlay(soundInstance.position)
+              cursorPlayer.startPlay(soundInstance.position);
             }
           }
         }
@@ -340,6 +355,7 @@
 
           } else if (event.type === 'onAudioLoadComplete') { // 音频加载完成
             soundInstance = event.value;
+            _this.maxProgress = soundInstance.duration;
             _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
           } else if (event.type === 'onInitUiComplete') { // 初始化UI完成
 
@@ -415,6 +431,7 @@
       },
       loadImageResource() {
         let _this = this;
+        _this.imgLoadLock = true;//上锁
         if (!_this.imgPathProp) {
           return;
         }
@@ -441,6 +458,7 @@
         if (!this.audioPathProp) {
           return
         }
+        this.audioLoadLock = true;//上锁，禁止同时调用
         console.log('loadMp3Resource');
         const audioPath = this.audioPathProp;
         createjs.Sound.registerPlugins([createjs.HTMLAudioPlugin]);
@@ -452,6 +470,7 @@
         if (!this.cursorPathProp) {
           return;
         }
+        this.cursorLoadLock = true;
         console.log('loadCursorResource');
         const _this = this;
         const xhr = new XMLHttpRequest();
@@ -619,15 +638,9 @@
         this.timeText = '00:00 / ' + this.formatTime(soundInstance.duration / 1000);
 
         soundInstance.on('complete', function (event) {
-          console.log('complete-->' + event);
-          console.log('soundInstance.paused-->' + soundInstance.paused);
           soundInstance.paused = true;
-          console.log('soundInstance.paused-->' + soundInstance.paused);
           soundInstance.position = 0;
           scoreCallback({type: 'onEndPlay', value: soundInstance});
-
-          // playContainer.getChildAt(0).visible = true;
-          // playContainer.getChildAt(1).visible = false;
           _this.isPlay = false
         });
         soundInstance.on('loop', function (event) {
@@ -637,6 +650,7 @@
         soundInstance.on('failed', function (event) {
           console.log('failed-->' + event)
         });
+        this.audioLoadLock = false;//解锁，可以进行再次加载
         scoreCallback({type: 'onAudioLoadComplete', value: soundInstance})
       },
       resetUI() {
@@ -743,6 +757,7 @@
         scoreContainer.addChild(cursorContainer);
 
         this.isLoadComplete = true;
+        _this.imgLoadLock = false; //解锁，可以进行下一次UI渲染
         scoreCallback({type: 'onInitUiComplete', value: 0})
       },
       openFullScreen(element) {
@@ -917,6 +932,7 @@
         scoreContainer.addChild(bitmap1);
       },
       initScoreCursor() {
+        console.log(scoredata)
         for (let x = 0; x < scoredata.noteItemList.length; x++) {
           const item = scoredata.noteItemList[x];
           const obj = {};
@@ -939,19 +955,45 @@
           }
         }
 
-        const timeSeq = [];
+        for (let x = 0; x < scoredata.measureItemList.length; x++) {
+          const item = scoredata.measureItemList[x];
+          const obj = {};
+          obj.ms = item.ms;
+          obj.system = item.system;
+          obj.page = item.page;
+          if (item.box) {
+            obj.l = item.box.left;
+            obj.r = item.box.right;
+            obj.t = item.box.top;
+            obj.b = item.box.bottom
+          }
+
+          if (measureSeq[item.ms]) {
+            measureSeq[item.ms].push(obj)
+          } else {
+            const arr = [];
+            arr.push(obj);
+            measureSeq[item.ms] = arr
+          }
+        }
+
+        const noteTimeSeq = [];
+        const measureTimeSeq = [];
 
         // 记录时间线：
         for (let x = 0; x < noteSeq.length; x++) {
           if (noteSeq[x]) {
-            timeSeq.push(x)
+            noteTimeSeq.push(x)
           }
         }
-        cursorPlayer = this.createCursorPlayer(timeSeq, cursorContainer)
+        cursorPlayer = this.createCursorPlayer(noteTimeSeq,measureTimeSeq, cursorContainer);
+        this.cursorLoadLock = false;//解锁，可以进行下一次加载
       },
-      createCursorPlayer(timeSeq, cursorContainer) {
+      createCursorPlayer(noteTimeSeq, measureTimeSeq, cursorContainer) {
+        //TODO 需要增加小节模式与动态模式
         const _this = this;
         const cursorPlayer = {};
+        let type = 0;//0,音符，1，小节，2，动态光标
         let timeout;
         let isCursorPlay = false;
         let blueTick = 0, redTick = 0, currentMs = -1, nextMs = 0,
@@ -973,22 +1015,43 @@
           isCursorPlay = false
         };
 
-        function caclOffsetAndStartPlay(ms) {
-          _this.isCursor = false
-          // 转到进度，并更新光标位置
-          const currentTime = ms;// 拖拽之后的当前时间点（音频文件播放的当前毫秒值）
-          let offTime = 0;
-          for (let x = 0; x < timeSeq.length; x++) { // 遍历数组找出距离当前时间点或之后一个光标，并记录
-            const ms = timeSeq[x];
-            if (ms >= currentTime) {
+        function getNextCursorPosition(ms) {
+          let timeIndex = 0;
+          for (let x = 0; x < noteTimeSeq.length; x++) { // 遍历数组找出距离当前时间点或之后一个光标，并记录
+            if (noteTimeSeq[x] >= ms) {
               timeIndex = x;
-              offTime = ms - currentTime;
-              currentMs = timeSeq[x - 1];
-              break
+              break;
             }
           }
-          _this.isCursor = true;
-          startLoop(offTime, ms)
+          return timeIndex;
+        }
+
+        cursorPlayer.gotoMs = function(ms){
+          timeIndex = getNextCursorPosition(ms);
+          currentMs = noteTimeSeq[timeIndex];
+          let tempArr = noteSeq[currentMs];
+          blueTick = -1;
+          redTick = -1;
+          for (let x = 0; x < tempArr.length; x++) {
+            let obj = tempArr[x];
+            console.log(obj);
+            if (obj.staff === 1) {
+              blueTick = currentMs;
+            }else if (obj.staff === 2) {
+              redTick = currentMs;
+            }
+          }
+          cursorPlayer.drawNoteItem(currentMs);
+        };
+
+        function caclOffsetAndStartPlay(ms) {
+          isCursorPlay = false;
+          // 转到进度，并更新光标位置
+          timeIndex = getNextCursorPosition(ms);
+          currentMs = noteTimeSeq[timeIndex];
+          let offTime = ms - currentMs;
+          isCursorPlay = true;
+          startLoop(offTime, ms);
         }
 
         /**
@@ -997,14 +1060,14 @@
          */
         function loop(x) {
           timeout = setTimeout(function () {
-            if (isCursorPlay && _this.isCursor) {
-              currentMs = timeSeq[timeIndex];
+            if (isCursorPlay) {
+              currentMs = noteTimeSeq[timeIndex];
               if (noteSeq[currentMs]) {
                 cursorPlayer.drawNoteItem(currentMs)
               }
               nextMs = 0;
-              if (timeSeq.length > timeIndex + 1) {
-                nextMs = timeSeq[timeIndex + 1]
+              if (noteTimeSeq.length > timeIndex + 1) {
+                nextMs = noteTimeSeq[timeIndex + 1]
               } else {
                 // isPlay = false;
               }
@@ -1022,6 +1085,8 @@
           startTime = new Date().getTime() - offMs;
           loop(delay)
         }
+
+
 
         /**
          * 绘制光标
@@ -1085,6 +1150,21 @@
                       const shape = _this.createRect('#FF5151', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale)
                       shape.name = 'redTick' + redTick;
                       cursorContainer.addChild(shape)
+                      if (_this.direction === 0) {
+                        if (currentPage !== obj.page) {
+                          _this.gotoPage(obj.page)
+                        }
+                      } else if (_this.direction === 1) {
+                        //判断光标是否在显示高度的多少范围之内，不在则下一屏
+                        let top = -scoreContainer.y;
+                        let bottom = -scoreContainer.y + stageHeight;
+                        let objY = p.y + obj.t / scale;
+                        top = top + stageHeight * (1 - 0.7) / 2;
+                        bottom = bottom - stageHeight * (1 - 0.7) / 2;
+                        if (objY < top || objY > bottom) {
+                          _this.gotoYPointScreen(objY - stageHeight / 2);
+                        }
+                      }
                     }
                   }
                 }
@@ -1093,10 +1173,8 @@
           }
         };
         cursorPlayer.drawNoteItem(0);
-
         return cursorPlayer
       },
-
       gotoYPointScreen(pointY) {
         if (!isChangePage) {
           isChangePage = true;
@@ -1220,7 +1298,7 @@
             over: 1,
             press: 2
           }
-        }
+        };
         const sheet = new createjs.SpriteSheet(data);
         const sprite = new createjs.Sprite(sheet);
         var helper = new createjs.ButtonHelper(sprite, 'idle', 'over', 'press');
@@ -1236,11 +1314,11 @@
         if (_seconds < 0) {
           _seconds = 0
         }
-        _seconds = parseInt(_seconds)
-        let result = ''
-        const seconds = parseInt(_seconds % 60)
-        const mins = parseInt(_seconds % 3600 / 60)
-        const hours = parseInt(_seconds / 3600)
+        _seconds = parseInt(_seconds);
+        let result = '';
+        const seconds = parseInt(_seconds % 60);
+        const mins = parseInt(_seconds % 3600 / 60);
+        const hours = parseInt(_seconds / 3600);
 
         if (hours) {
           result = this.PadZero(hours) + ':' + this.PadZero(mins) + ':' + this.PadZero(seconds)
@@ -1377,47 +1455,15 @@
 
   canvas{
     background-color: #6f7180;
-    display: block;
   }
   #score-player {
     position: relative;
     overflow: hidden;
-  }
-
-  #btn-left{
-    color: white;
-    position: absolute;
-    display: block;
-    top: 0;
-    background-color: black;
-    opacity: 0;
-  }
-  #btn-left:hover{
-    opacity: 0.1;
-  }
-
-  #btn-right{
-    color: white;
-    position: absolute;
-    background-color: black;
-    display: block;
-    top: 0;
-    opacity: 0;
-  }
-  #btn-right:hover{
-    opacity: 0.1;
+    margin: auto
   }
 
   .loading {
-    display: block;
     position: absolute;
   }
 
-
-  .loading-text {
-    font-size: 20px;
-    color: black;
-    font-weight: bolder;
-    font-family: "Alibaba Sans", serif;
-  }
 </style>

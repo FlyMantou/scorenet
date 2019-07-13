@@ -1,5 +1,5 @@
 <template>
-  <div ref="container">
+  <div ref="container" class="controller-container" :style="{ width: controllerWidth+'px', height: controllerHeight+'px' }">
     <div
       class="score-controller"
       :style="{ width: controllerWidth+'px', height: controllerHeight+'px' }">
@@ -154,7 +154,7 @@
         slider: null,        //滚动条DOM元素
         thunk: null,         //拖拽DOM元素
         progress: 0,
-        max: 100,
+        max: this.maxProgress,
         min: 0,
         isOnSeek: false,
       }
@@ -197,6 +197,19 @@
       this.slider = this.$refs.slider;
       this.thunk = this.$refs.trunk;
       let _this = this;
+      this.slider.onclick = function (e) {
+        let left = $(_this.slider).offset().left;
+        let newWidth = e.clientX - left;
+        if (newWidth <= 0 || newWidth >= _this.seekWidth) {
+          return;
+        }else {
+          let scale = newWidth / _this.slider.offsetWidth;
+          _this.progress = Math.ceil((_this.max - _this.min) * scale + _this.min);
+          _this.progress = Math.max(_this.progress, _this.min);
+          _this.progress = Math.min(_this.progress, _this.max);
+          _this.$emit("onProgressChanged", _this.progress);
+        }
+      };
       this.thunk.onmousedown = function (e) {
         let width = parseInt(_this.seekWidth);
         let disX = e.clientX;
@@ -343,6 +356,9 @@
     opacity: .6
   }
 
+  .controller-container{
+    position: relative;
+  }
 
   .score-controller {
     background-color: rgba(0, 0, 0, 0.8);
@@ -361,8 +377,6 @@
     display: none;
   }
 
-  svg {
-    display: block;
-  }
+
 
 </style>
