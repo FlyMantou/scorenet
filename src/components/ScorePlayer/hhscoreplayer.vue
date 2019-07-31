@@ -1,6 +1,6 @@
 <template>
   <div ref="container" id="score-player" :style="{width:width+'px', height:height+'px'}">
-    <canvas id="canvas" ref="canvas" ></canvas>
+    <canvas id="canvas" ref="canvas"></canvas>
     <div style="position: absolute;bottom: 0">
       <HHScoreController
         :current-progress="currentProgress"
@@ -13,7 +13,7 @@
         :full-state-value="fullState"
         :direction-state-value="direction"
         :page-per-state-value="pagePer"
-        :cursor-state-value="isCursor"
+        :cursor-state-value="cursorState"
         @onProgressChanged="onControllerProgressChanged"
         @onPlayStateChanged="onControllerPlayStateChanged"
         @onStop="onControllerStop"
@@ -23,8 +23,16 @@
         @onCursorStateChanged="onControllerCursorStateChanged"
       ></HHScoreController>
     </div>
-    <div ref="loading" v-show="!isLoadComplete" class="loading" :style="{width: height/4+'px',height:height/4+'px',left:(width/2-height/8)+'px',top:(height/2-height/8)+'px'}">
-      <img src="../../assets/img/load.png" style="width: 100%;height: 100%"/>
+
+    <div ref="loading" v-show="!isLoadComplete" class="loading"
+         :style="{width: loadingConWidth+'px',height:loadingConHeight+'px',left:loadingConLeft+'px',top:loadingConTop+'px'}">
+      <!--<img src="../../assets/img/load.png" style="width: 100%;height: 100%"/>-->
+      <div class="progress-con">
+        <div class="progress" :style="{width: progressWidth+'px'}">
+
+        </div>
+      </div>
+      <span style="color: white;text-align: center;width: 100%;font-size: 10px">加载资源，请稍后</span>
     </div>
   </div>
 </template>
@@ -97,12 +105,13 @@
         currentProgress: 0,
         maxProgress: 100,
         controllerHeight: 80,
+        progressWidth: 0,
         hideState: false,
         timeText: '00:00 / 00:00',
         fullState: false,
         isLoadComplete: false,
         isPlay: false,
-        isCursor: true,
+        cursorState: 1,
         volume: 100,
         imgLoadLock: false,
         audioLoadLock: false,
@@ -117,7 +126,7 @@
       }
     },
     watch: {
-      autoDirectionProp(val){
+      autoDirectionProp(val) {
         this.autoDirectionProp = val;
         console.log("watch-->autoDirectionProp");
         this.checkAutoDirection();
@@ -125,13 +134,13 @@
           this.initUI();
         }
       },
-      widthProp(val){
+      widthProp(val) {
         console.log("watch-->widthProp");
         this.width = val;
       },
-      heightProp(val){
+      heightProp(val) {
         console.log("watch-->heightProp");
-        this.height  =val;
+        this.height = val;
       },
       directionProp(val) {
         console.log("watch-->directionProp");
@@ -162,6 +171,9 @@
       audioPathProp(val) {
         console.log('watch:audioPath-->' + val);
         // TODO 监听音频路径改变
+        if (val === undefined || val === null || val === "") {
+          return;
+        }
         if (!this.audioLoadLock) {
           this.audioPathProp = val;
           this.loadMp3Resource();
@@ -175,10 +187,24 @@
         }
       }
     },
-    beforeCreate(){
+    computed: {
+      loadingConWidth() {
+        return this.height / 4;
+      },
+      loadingConHeight() {
+        return this.height / 4;
+      },
+      loadingConLeft() {
+        return this.width / 2 - this.height / 8;
+      },
+      loadingConTop() {
+        return this.height / 2 - this.height / 8;
+      },
+    },
+    beforeCreate() {
       console.log("生命周期-->beforeCreate");
     },
-    beforeMount(){
+    beforeMount() {
       console.log("生命周期-->beforeMount");
     },
     mounted() {
@@ -187,6 +213,7 @@
         console.log("生命周期-->mounted");
         const _this = this;
         canvas = this.$refs.canvas;
+        //按键事件
         document.onkeydown = function (event) {
           if (event.keyCode === 37) { // left
             _this.prePage()
@@ -206,19 +233,46 @@
             }
           }
         };
+        //鼠标移入移出事件
         $(this.$refs.container).mouseenter(function () {
           _this.hideState = false;
         });
         $(this.$refs.container).mouseleave(function () {
           _this.hideState = true;
         });
+        //滑轮事件
+        $(canvas).bind('mousewheel DOMMouseScroll', function (event) { //on也可以 bind监听
+          if (_this.direction === 1) {
+            //Chorme
+            let wheel = event.originalEvent.wheelDelta;
+            let detal = event.originalEvent.detail;
+            if (event.originalEvent.wheelDelta) { //判断浏览器IE,谷歌滚轮事件
+              if (wheel > 0) { //当滑轮向上滚动时
+                scoreContainer.y += (_this.height / 4);
+              }
+              if (wheel < 0) { //当滑轮向下滚动时
+                scoreContainer.y -= (_this.height / 4);
+              }
+            } else if (event.originalEvent.detail) {  //Firefox滚轮事件
+              if (detal > 0) { //当滑轮向下滚动时
+                scoreContainer.y -= (_this.height / 4);
+              }
+              if (detal < 0) { //当滑轮向上滚动时
+                scoreContainer.y += (_this.height / 4);
+              }
+            }
+            event.preventDefault();
+          }
+
+        });
         //监听全屏与退出全屏事件
         window.onresize = function () {
+          console.log("window.onresize");
           if (!_this.checkFull()) {//非全屏
             //console.log("_this.fullState-->" + _this.fullState);
             if (_this.fullState) {
               //退出全屏
-              console.log("退出全屏:widthProp-->"+_this.widthProp);
+              console.log("退出全屏:widthProp-->" + _this.widthProp);
               _this.fullState = false;
               _this.width = _this.widthProp;
               _this.height = _this.heightProp;
@@ -315,42 +369,47 @@
       },
       onControllerCursorStateChanged(state) {
         console.log("onCursorStateChanged-->" + state);
-        if (this.isCursor) {
-          this.isCursor = false;
+        if (this.cursorState === 0) {
+          this.cursorState = 1;
           this.changeCursor(1);
+        } else if (this.cursorState === 1) {
+          this.cursorState = 2;
+          this.changeCursor(2);
         } else {
-          this.isCursor = true;
+          this.cursorState = 0;
           this.changeCursor(0);
         }
       },
-      checkAutoDirection(){
+      checkAutoDirection() {
         if (this.autoDirectionProp) {
-          if (this.width <= 800){
+          if (this.width <= 800) {
             this.direction = 1;
           } else if (this.width <= this.height) {
             this.direction = 1;
-          }else {
+          } else {
             this.direction = 0;
           }
-          if (this.direction === 0){
-            let k = this.width/this.height;
+          if (this.direction === 0) {
+            let k = this.width / this.height;
             if (k < 1.4) {
               this.pagePer = 1;
-            }if (k < 2.1) {
+            }
+            if (k < 2.1) {
               this.pagePer = 2;
-            }else {
+            } else {
               this.pagePer = 3;
             }
           }
         }
       },
-      postInit(){
+      postInit() {
         let _this = this;
         //判断是否需要自动适应
         _this.checkAutoDirection();
         _this.initPlayer(function (event) {
           if (event.type === 'onImgLoadProgress') { // 乐谱图片加载进度
             const progress = event.value * 100;
+            _this.updateLoadingProgress(progress/100);
           } else if (event.type === 'onImgLoadComplete') { // 乐谱图片加载完成
 
           } else if (event.type === 'onAudioLoadComplete') { // 音频加载完成
@@ -358,7 +417,9 @@
             _this.maxProgress = soundInstance.duration;
             _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
           } else if (event.type === 'onInitUiComplete') { // 初始化UI完成
-
+            if (cursorPlayer) {
+              //cursorPlayer.showAllCursor();
+            }
           } else if (event.type === 'onNextPage') { // 下一页
 
           } else if (event.type === 'onPrePage') { // 上一页
@@ -394,7 +455,7 @@
           }
         })
       },
-      resetPlayer(){
+      resetPlayer() {
         if (canvas != null) {
           canvas.width = this.width;
           canvas.height = this.height;
@@ -407,9 +468,9 @@
         initStageHeight = canvas.height * 2;
         stageWidth = initStageWidth;
         stageHeight = initStageHeight;
-        if (stage===null)
+        if (stage === null)
           stage = new createjs.Stage(canvas);
-        if (scoreContainer===null)
+        if (scoreContainer === null)
           scoreContainer = new createjs.Container();
         if (uiContainer === null)
           uiContainer = new createjs.Container();
@@ -419,8 +480,8 @@
           cursorContainer = new createjs.Container();
         if (scoreScreenContainer === null)
           scoreScreenContainer = new createjs.Container();
-        if (loadObj===null)
-          loadObj = this.createLoading((stageWidth ) / 4, (stageHeight) / 4);
+        if (loadObj === null)
+          loadObj = this.createLoading((stageWidth) / 4, (stageHeight) / 4);
 
         createjs.Touch.enable(stage);
         createjs.Ticker.framerate = 60;
@@ -440,7 +501,7 @@
         currentPage = 1;
         console.log('loadImageResource');
         const imgArr = _this.imgPathProp;
-        const loader = new createjs.LoadQueue(false);// 这里一共可以是3个参数 第一个是是否用XHR模式加载 第二个是基础路径  第三个是跨域
+        const loader = new createjs.LoadQueue(true);// 这里一共可以是3个参数 第一个是是否用XHR模式加载 第二个是基础路径  第三个是跨域
         loader.addEventListener('fileload', _this.onImgFileLoad);
         loader.addEventListener('progress', _this.onImgLoadProgress);
         loader.addEventListener('complete', _this.onImgLoadComplete);
@@ -607,13 +668,6 @@
       },
       onImgLoadProgress(event) {
         scoreCallback({type: 'onImgLoadProgress', value: event.progress});
-        if (loadObj) {
-          if (parseInt(event.progress * 100) === 100) {
-            loadObj.hide();
-          } else {
-            loadObj.update("加载乐谱：" + parseInt(event.progress * 100));
-          }
-        }
       },
       onImgLoadComplete(event) {
         scoreCallback({type: 'onImgLoadComplete', value: event});
@@ -626,8 +680,8 @@
       },
       onAudioLoadComplete(event) {
         const _this = this;
-        createjs.Sound.removeEventListener("progress",this.onAudioLoadProgress);
-        createjs.Sound.removeEventListener("fileload",this.onAudioLoadComplete);
+        createjs.Sound.removeEventListener("progress", this.onAudioLoadProgress);
+        createjs.Sound.removeEventListener("fileload", this.onAudioLoadComplete);
         // event.currentTarget.removeEventListener("complete", onAudioLoadComplete);
         isAudioLoadComplete = true;
         if (soundInstance == null) {
@@ -677,7 +731,7 @@
       initUI() {
         const _this = this;
         this.resetUI();
-        console.log('initUI-->'+stage);
+        console.log('initUI-->' + stage);
         canvas.width = stageWidth;
         canvas.height = stageHeight;
         canvas.style.width = stageWidth / 2 + 'px';
@@ -772,9 +826,17 @@
         }
       },
       changeCursor(state) {
-        if (state === 0) { // 正常显示光标
+        if (state === 1) { // 显示音符光标
           cursorContainer.visible = true;
-        } else if (state === 1) { // 禁用光标
+          if (cursorPlayer) {
+            cursorPlayer.setType(0);
+          }
+        } else if (state === 2) { // 显示小节光标
+          cursorContainer.visible = true;
+          if (cursorPlayer) {
+            cursorPlayer.setType(1);
+          }
+        } else {// 禁用光标
           cursorContainer.visible = false;
         }
       },
@@ -932,7 +994,7 @@
         scoreContainer.addChild(bitmap1);
       },
       initScoreCursor() {
-        console.log(scoredata)
+        console.log(scoredata);
         for (let x = 0; x < scoredata.noteItemList.length; x++) {
           const item = scoredata.noteItemList[x];
           const obj = {};
@@ -968,13 +1030,8 @@
             obj.b = item.box.bottom
           }
 
-          if (measureSeq[item.ms]) {
-            measureSeq[item.ms].push(obj)
-          } else {
-            const arr = [];
-            arr.push(obj);
-            measureSeq[item.ms] = arr
-          }
+          measureSeq[item.ms] = obj;
+
         }
 
         const noteTimeSeq = [];
@@ -986,7 +1043,13 @@
             noteTimeSeq.push(x)
           }
         }
-        cursorPlayer = this.createCursorPlayer(noteTimeSeq,measureTimeSeq, cursorContainer);
+        // 记录时间线：
+        for (let x = 0; x < measureSeq.length; x++) {
+          if (measureSeq[x]) {
+            measureTimeSeq.push(x)
+          }
+        }
+        cursorPlayer = this.createCursorPlayer(noteTimeSeq, measureTimeSeq, cursorContainer);
         this.cursorLoadLock = false;//解锁，可以进行下一次加载
       },
       createCursorPlayer(noteTimeSeq, measureTimeSeq, cursorContainer) {
@@ -996,8 +1059,13 @@
         let type = 0;//0,音符，1，小节，2，动态光标
         let timeout;
         let isCursorPlay = false;
-        let blueTick = 0, redTick = 0, currentMs = -1, nextMs = 0,
-          startTime = 0, timeIndex = 0;
+        let blueTick = 0, redTick = 0, measureTick = 0, currentMs = -1, nextMs = 0,
+          startTime = 0, noteTimeIndex = 0, measureTimeIndex;
+
+        cursorPlayer.setType = function (t) {
+          type = t;
+          cursorPlayer.gotoMs(currentMs);
+        };
 
         cursorPlayer.startPlay = function (ms) {
           console.log('--------------startPlay---------------');
@@ -1015,40 +1083,68 @@
           isCursorPlay = false
         };
 
-        function getNextCursorPosition(ms) {
+        function getNextCursorPosition(ms, type) {
           let timeIndex = 0;
-          for (let x = 0; x < noteTimeSeq.length; x++) { // 遍历数组找出距离当前时间点或之后一个光标，并记录
-            if (noteTimeSeq[x] >= ms) {
-              timeIndex = x;
-              break;
+          if (type === 0) {
+            for (let x = 0; x < noteTimeSeq.length; x++) { // 遍历数组找出距离当前时间点或之后一个光标，并记录
+              if (noteTimeSeq[x] >= ms) {
+                timeIndex = x;
+                break;
+              }
+            }
+          } else if (type === 1) {
+            for (let x = 0; x < measureTimeSeq.length; x++) { // 遍历数组找出距离当前时间点或之前一个光标，并记录
+              if (measureTimeSeq[x] >= ms) {
+                if (measureTimeSeq[x] !== ms) {
+                  timeIndex = x - 1;
+                } else {
+                  timeIndex = x;
+                }
+                break;
+              }
             }
           }
+
           return timeIndex;
         }
 
-        cursorPlayer.gotoMs = function(ms){
-          timeIndex = getNextCursorPosition(ms);
-          currentMs = noteTimeSeq[timeIndex];
-          let tempArr = noteSeq[currentMs];
-          blueTick = -1;
-          redTick = -1;
-          for (let x = 0; x < tempArr.length; x++) {
-            let obj = tempArr[x];
-            console.log(obj);
-            if (obj.staff === 1) {
-              blueTick = currentMs;
-            }else if (obj.staff === 2) {
-              redTick = currentMs;
+        cursorPlayer.gotoMs = function (ms) {
+          if (type === 0) {
+            noteTimeIndex = getNextCursorPosition(ms, 0);
+            currentMs = noteTimeSeq[noteTimeIndex];
+            let tempArr = noteSeq[currentMs];
+            blueTick = -1;
+            redTick = -1;
+            for (let x = 0; x < tempArr.length; x++) {
+              let obj = tempArr[x];
+              console.log(obj);
+              if (obj.staff === 1) {
+                blueTick = currentMs;
+              } else if (obj.staff === 2) {
+                redTick = currentMs;
+              }
             }
+          } else if (type === 1) {
+            measureTimeIndex = getNextCursorPosition(ms, 1);
+            noteTimeIndex = getNextCursorPosition(ms, 0);
+            currentMs = measureTimeSeq[measureTimeIndex];
           }
+          console.log("currentMs-->" + currentMs);
+          console.log("measureTimeIndex-->" + measureTimeIndex);
           cursorPlayer.drawNoteItem(currentMs);
         };
 
         function caclOffsetAndStartPlay(ms) {
           isCursorPlay = false;
           // 转到进度，并更新光标位置
-          timeIndex = getNextCursorPosition(ms);
-          currentMs = noteTimeSeq[timeIndex];
+
+          if (type === 0) {
+            noteTimeIndex = getNextCursorPosition(ms, 0);
+            currentMs = noteTimeSeq[noteTimeIndex];
+          } else if (type === 1) {
+            measureTimeIndex = getNextCursorPosition(ms, 1);
+            currentMs = measureTimeSeq[measureTimeIndex];
+          }
           let offTime = ms - currentMs;
           isCursorPlay = true;
           startLoop(offTime, ms);
@@ -1061,17 +1157,15 @@
         function loop(x) {
           timeout = setTimeout(function () {
             if (isCursorPlay) {
-              currentMs = noteTimeSeq[timeIndex];
+              currentMs = noteTimeSeq[noteTimeIndex];
               if (noteSeq[currentMs]) {
                 cursorPlayer.drawNoteItem(currentMs)
               }
               nextMs = 0;
-              if (noteTimeSeq.length > timeIndex + 1) {
-                nextMs = noteTimeSeq[timeIndex + 1]
-              } else {
-                // isPlay = false;
+              if (noteTimeSeq.length > noteTimeIndex + 1) {
+                nextMs = noteTimeSeq[noteTimeIndex + 1]
               }
-              timeIndex++;
+              noteTimeIndex++;
               const offset = new Date().getTime() - startTime;
               loop(nextMs - offset)
             }
@@ -1086,6 +1180,21 @@
           loop(delay)
         }
 
+        cursorPlayer.showAllCursor = function () {
+          const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
+          for (let i = 0; i < noteTimeSeq.length; i++) {
+            let ms = noteTimeSeq[i];
+            let objArr = noteSeq[ms];
+            for (let j = 0; j < objArr.length; j++) {
+              let obj = objArr[j];
+              if (scoreContainer.getChildAt(obj.page - 1)) {
+                const p = scoreContainer.getChildAt(obj.page - 1);
+                const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale, 0);
+                cursorContainer.addChild(shape);
+              }
+            }
+          }
+        };
 
 
         /**
@@ -1093,7 +1202,7 @@
          * @param ms
          */
         cursorPlayer.drawNoteItem = function (ms) {
-          if (noteSeq[ms]) {
+          if (noteSeq[ms] && type === 0) {
             cursorContainer.removeAllChildren();
             const tempArr = noteSeq[ms];
             for (let x = 0; x < tempArr.length; x++) {
@@ -1115,7 +1224,9 @@
                   if (!cursorContainer.getChildByName('blueTick' + blueTick)) {
                     if (scoreContainer.getChildAt(obj.page - 1)) {
                       const p = scoreContainer.getChildAt(obj.page - 1);
-                      const shape = _this.createRect('#0072E3', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale);
+                      //+音符宽度的五分之一
+                      let offWidth = (obj.r - obj.l) / scale / 4;
+                      const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offWidth, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offWidth, offWidth / 2);
                       shape.name = 'blueTick' + blueTick;
                       cursorContainer.addChild(shape);
                       if (_this.direction === 0) {
@@ -1147,7 +1258,9 @@
                   if (!cursorContainer.getChildByName('redTick' + redTick)) {
                     if (scoreContainer.getChildAt(obj.page - 1)) {
                       const p = scoreContainer.getChildAt(obj.page - 1);
-                      const shape = _this.createRect('#FF5151', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale)
+                      let offWidth = (obj.r - obj.l) / scale / 4;
+                      const shape = _this.createRoundRect('#FF5151', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offWidth, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offWidth, offWidth / 2);
+                      //const shape = _this.createRect('#FF5151', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale)
                       shape.name = 'redTick' + redTick;
                       cursorContainer.addChild(shape)
                       if (_this.direction === 0) {
@@ -1170,9 +1283,40 @@
                 }
               }
             }
+          } else if (measureSeq[ms] && type === 1) {//小节模式
+            let obj = measureSeq[ms];
+            console.log("小节模式")
+            measureTick = ms;
+            const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
+            if (!cursorContainer.getChildByName('measure' + measureTick)) {
+              cursorContainer.removeAllChildren();
+              console.log(obj);
+              console.log(obj.page);
+              if (scoreContainer.getChildAt(obj.page - 1)) {//获取乐谱图片是否存在
+                const p = scoreContainer.getChildAt(obj.page - 1);
+                const shape = _this.createRect('#00ffa7', 0.3, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale);
+                shape.name = 'measure' + measureTick;
+                cursorContainer.addChild(shape);
+                if (_this.direction === 0) {
+                  if (currentPage !== obj.page) {
+                    _this.gotoPage(obj.page)
+                  }
+                } else if (_this.direction === 1) {
+                  //判断光标是否在显示高度的多少范围之内，不在则下一屏
+                  let top = -scoreContainer.y;
+                  let bottom = -scoreContainer.y + stageHeight;
+                  let objY = p.y + obj.t / scale;
+                  top = top + stageHeight * (1 - 0.7) / 2;
+                  bottom = bottom - stageHeight * (1 - 0.7) / 2;
+                  if (objY < top || objY > bottom) {
+                    _this.gotoYPointScreen(objY - stageHeight / 2);
+                  }
+                }
+              }
+            }
           }
         };
-        cursorPlayer.drawNoteItem(0);
+        //cursorPlayer.drawNoteItem(0);
         return cursorPlayer
       },
       gotoYPointScreen(pointY) {
@@ -1310,6 +1454,12 @@
         rect.alpha = alpha;
         return rect
       },
+      createRoundRect(fillColor, alpha, x, y, w, h, r) {
+        const rect = new createjs.Shape();
+        rect.graphics.beginFill(fillColor).drawRoundRect(x, y, w, h, r);
+        rect.alpha = alpha;
+        return rect
+      },
       formatTime(_seconds) {
         if (_seconds < 0) {
           _seconds = 0
@@ -1421,8 +1571,11 @@
         this.$destroy(true);
         this.$el.parentNode.removeChild(this.$el);
       },
+      updateLoadingProgress(val) {
+        this.progressWidth = this.loadingConWidth*val;
+      }
     },
-    deactivated(){
+    deactivated() {
       console.log("生命周期-->deactivated");
       this.destroyElement();
     },
@@ -1446,24 +1599,40 @@
       loadObj = null;
       images = {};
       //createjs.Sound.removeAllSounds();
-      createjs.Ticker.removeEventListener("tick",this.onFrame);
+      createjs.Ticker.removeEventListener("tick", this.onFrame);
     }
   }
 </script>
 
 <style scoped>
 
-  canvas{
+  canvas {
     background-color: #6f7180;
   }
+
   #score-player {
     position: relative;
-    overflow: hidden;
+    /*overflow: hidden;*/
     margin: auto
   }
 
   .loading {
     position: absolute;
+  }
+
+  .progress-con {
+    width: 100%;
+    height: 20%;
+    border: 1px white solid;
+    border-radius: 40px;
+    overflow: auto;
+  }
+
+  .progress {
+    width: 20px;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    background-clip: content-box;
   }
 
 </style>

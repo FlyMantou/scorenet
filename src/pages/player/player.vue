@@ -10,7 +10,7 @@
       :page-prop="page"
       :auto-direction-prop="autoDirection"
     />
-    <div @click="testClick">按钮</div>
+    <!--<div @click="testClick">按钮</div>-->
   </div>
 </template>
 
@@ -28,7 +28,7 @@
         audioPath: '',//要加载的音频地址，仅支持mp3文件
         cursorPath: '',//要加载的光标文件地址，编码后的光标文件
         playerWidth: 600,//自定义播放器宽度
-        playerHeight: 320,//自定义播放器高度
+        playerHeight: 400,//自定义播放器高度
         directionTemp: 0,//自定义横版还是竖版显示，只有当autoDirection为false的时候生效
         page: 2,//自定义横版展示页面数，只有当autoDirection为false的时候生效
         autoDirection: true,//自动根据宽高设置版式
@@ -36,7 +36,21 @@
     },
     mounted() {
       console.log(this.$route.params.id)
-      this.getData();
+      //this.getData();
+      const pngFiles = [];
+      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/1.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/2.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/3.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/4.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/5.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/6.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+     // pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/7.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      //pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/8.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      //pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/9.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+     // pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/10.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+     // pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/11.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      let cursorPath = encodeURI('http://yulindb.myhuanghai.com/parse/1.cur').replace(/\+/g, '%2B')
+      this.initScorePlayerData(pngFiles,"",cursorPath)
     },
     methods: {
       initScorePlayerData(pngFiles,audioPath,cursorPath) {
