@@ -27,8 +27,8 @@
         imgPathArr: [],//要加载的图片的地址集合，按页面顺序排序，集合大小视为乐谱页面数
         audioPath: '',//要加载的音频地址，仅支持mp3文件
         cursorPath: '',//要加载的光标文件地址，编码后的光标文件
-        playerWidth: 600,//自定义播放器宽度
-        playerHeight: 400,//自定义播放器高度
+        playerWidth: 400,//自定义播放器宽度
+        playerHeight: 240,//自定义播放器高度
         directionTemp: 0,//自定义横版还是竖版显示，只有当autoDirection为false的时候生效
         page: 2,//自定义横版展示页面数，只有当autoDirection为false的时候生效
         autoDirection: true,//自动根据宽高设置版式

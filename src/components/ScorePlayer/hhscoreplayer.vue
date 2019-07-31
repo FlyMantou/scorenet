@@ -23,6 +23,17 @@
         @onCursorStateChanged="onControllerCursorStateChanged"
       ></HHScoreController>
     </div>
+    <div v-show="isLoadComplete">
+      <div class="hor-mask" v-show="isLoadComplete" :style="{width:width+'px', height:height+'px'}">
+        <div class="left-mask" @click="handlePrePage" :style="{width:width/6+'px', height:height+'px', left:'0px', top:'0px'}">
+          <svg t="1564555123085" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2999"><path d="M254.890667 512L702.890667 64l60.416 60.330667-448 448L254.890667 512z m60.842666-60.757333l453.290667 453.376-60.330667 60.330666-453.376-453.376 60.416-60.330666z" p-id="3000" fill="#ffffff"></path></svg>
+        </div>
+        <div class="right-mask" @click="handleNextPage" :style="{width:width/6+'px', height:height+'px', left:(5*width/6)+'px', top:'0px'}">
+          <svg t="1564555091300" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2230"><path d="M769.11 512l-448 448-60.417-60.33 448-448L769.11 512z m-60.758 60.672L254.891 119.467l60.586-60.416 453.12 453.376-60.33 60.33z" p-id="2231" fill="#ffffff"></path></svg>
+        </div>
+      </div>
+    </div>
+
 
     <div ref="loading" v-show="!isLoadComplete" class="loading"
          :style="{width: loadingConWidth+'px',height:loadingConHeight+'px',left:loadingConLeft+'px',top:loadingConTop+'px'}">
@@ -31,8 +42,9 @@
         <div class="progress" :style="{width: progressWidth+'px'}">
 
         </div>
+
       </div>
-      <span style="color: white;text-align: center;width: 100%;font-size: 10px">加载资源，请稍后</span>
+      <span :style="{color: 'white',textAlign: 'center',width: '100%',fontSize: loadingConHeight/8+'px'}">加载资源</span>
     </div>
   </div>
 </template>
@@ -241,7 +253,7 @@
           _this.hideState = true;
         });
         //滑轮事件
-        $(canvas).bind('mousewheel DOMMouseScroll', function (event) { //on也可以 bind监听
+        $(this.$refs.container).bind('mousewheel DOMMouseScroll', function (event) { //on也可以 bind监听
           if (_this.direction === 1) {
             //Chorme
             let wheel = event.originalEvent.wheelDelta;
@@ -303,6 +315,12 @@
 
     },
     methods: {
+      handlePrePage(){
+        this.prePage();
+      },
+      handleNextPage(){
+        this.nextPage();
+      },
       onControllerProgressChanged(progress) {
         //progress为百分比
         console.log("onProgressChanged-->" + progress);
@@ -796,8 +814,8 @@
         //创建弹幕UI
         barrange = this.createBarrange();
 
-        uiContainer.addChild(leftBtn);
-        uiContainer.addChild(rightBtn);
+        //uiContainer.addChild(leftBtn);
+        //uiContainer.addChild(rightBtn);
         uiContainer.addChild(barrange.container);
 
         //页码显示
@@ -884,6 +902,9 @@
         }
       },
       nextPage() {
+        if (currentPage >= pageNum) {
+          return;
+        }
         console.log("currentPage-->" + currentPage);
         if (!isChangePage) {
           isChangePage = true;
@@ -906,6 +927,9 @@
         }
       },
       prePage() {
+        if (currentPage <= 1) {
+          return;
+        }
         console.log("currentPage-->" + currentPage);
         if (!isChangePage) {
           isChangePage = true;
@@ -1633,6 +1657,54 @@
     height: 100%;
     background-color: rgba(255, 255, 255, 0.5);
     background-clip: content-box;
+  }
+  .hor-mask{
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .ver-mask{
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .left-mask{
+    background-color: black;
+    opacity: 0;
+    position: absolute;
+  }
+  .left-mask:hover{
+    opacity: 0.2;
+  }
+  .right-mask{
+    background-color: black;
+    opacity: 0;
+    position: absolute;
+  }
+  .right-mask:hover{
+    opacity: 0.2;
+  }
+  .top-mask{
+    background-color: black;
+    opacity: 0;
+    position: absolute;
+  }
+  .top-mask:hover{
+    opacity: 0.2;
+  }
+  .bottom-mask{
+    background-color: black;
+    opacity: 0;
+    position: absolute;
+  }
+  .bottom-mask:hover{
+    opacity: 0.2;
+  }
+  .icon{
+    width: 20%;
+    height: 100%;
+    background-size: 20% 20%;
   }
 
 </style>
