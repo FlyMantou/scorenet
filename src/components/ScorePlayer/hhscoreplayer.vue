@@ -21,15 +21,16 @@
         @onDirectionStateChanged="onControllerDirectionStateChanged"
         @onPagePerStateChanged="onControllerPagePerStateChanged"
         @onCursorStateChanged="onControllerCursorStateChanged"
+        @onMoreClick="onMoreClick"
       ></HHScoreController>
     </div>
     <div v-show="isLoadComplete">
       <div class="hor-mask" v-show="isLoadComplete" :style="{width:width+'px', height:height+'px'}">
         <div class="left-mask" @click="handlePrePage" :style="{width:width/6+'px', height:height+'px', left:'0px', top:'0px'}">
-          <svg t="1564555123085" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2999"><path d="M254.890667 512L702.890667 64l60.416 60.330667-448 448L254.890667 512z m60.842666-60.757333l453.290667 453.376-60.330667 60.330666-453.376-453.376 60.416-60.330666z" p-id="3000" fill="#ffffff"></path></svg>
+          <svg t="1564555123085" class="mask-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2999"><path d="M254.890667 512L702.890667 64l60.416 60.330667-448 448L254.890667 512z m60.842666-60.757333l453.290667 453.376-60.330667 60.330666-453.376-453.376 60.416-60.330666z" p-id="3000" fill="#ffffff"></path></svg>
         </div>
         <div class="right-mask" @click="handleNextPage" :style="{width:width/6+'px', height:height+'px', left:(5*width/6)+'px', top:'0px'}">
-          <svg t="1564555091300" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2230"><path d="M769.11 512l-448 448-60.417-60.33 448-448L769.11 512z m-60.758 60.672L254.891 119.467l60.586-60.416 453.12 453.376-60.33 60.33z" p-id="2231" fill="#ffffff"></path></svg>
+          <svg t="1564555091300" class="mask-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2230"><path d="M769.11 512l-448 448-60.417-60.33 448-448L769.11 512z m-60.758 60.672L254.891 119.467l60.586-60.416 453.12 453.376-60.33 60.33z" p-id="2231" fill="#ffffff"></path></svg>
         </div>
       </div>
     </div>
@@ -45,6 +46,19 @@
 
       </div>
       <span :style="{color: 'white',textAlign: 'center',width: '100%',fontSize: loadingConHeight/8+'px'}">加载资源</span>
+    </div>
+
+    <div v-show="isLockProp===1" class="login-tip" :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
+      <span>此乐谱需登录才能完整查看，<a class="login-btn" @click="handleLoginClick()">立即登录</a></span>
+    </div>
+    <div v-show="isLockProp===2" class="login-tip" :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
+      <span>此乐谱为VIP会员免费浏览，如需完整浏览，请<a class="login-btn" @click="handleVIPClick()">立即购买VIP会员</a></span>
+    </div>
+    <div v-show="isLockProp===3" class="login-tip" :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
+      <span>精品乐谱，免费播放前 1 页，如需完整播放请使用 20 云谱币<a class="login-btn" @click="handleBuyClick()">兑换</a></span>
+    </div>
+    <div v-show="toastShow" class="toast" :style="{width: toastWidth+'px',height:'auto',left:toastLeft+'px',top:toastTop+'px'}">
+      <span>{{toastMsg}}</span>
     </div>
   </div>
 </template>
@@ -107,6 +121,7 @@
       pageProp: Number,
       directionProp: Number,
       autoDirectionProp: Boolean,
+      isLockProp: Number,//0，正常解锁，1，未登录锁住，2，非vip锁住
     },
     data() {
       return {
@@ -129,6 +144,8 @@
         audioLoadLock: false,
         cursorLoadLock: false,
         mountLock: false,
+        toastShow: false,
+        toastMsg: '提示',
         assets: {
           leftImgPath: leftImgImport,
           leftPressImgPath: leftPressImgImport,
@@ -138,6 +155,12 @@
       }
     },
     watch: {
+      isLockProp(val){
+        //当限制条件发生变化时触发，解锁和加锁都必须重绘UI
+        if (this.isLoadComplete) {
+          this.initUI();
+        }
+      },
       autoDirectionProp(val) {
         this.autoDirectionProp = val;
         console.log("watch-->autoDirectionProp");
@@ -212,6 +235,24 @@
       loadingConTop() {
         return this.height / 2 - this.height / 8;
       },
+      toastWidth() {
+        return this.height / 4;
+      },
+      toastLeft() {
+        return this.width / 2 - this.height / 8;
+      },
+      toastTop() {
+        return this.height / 2 - this.height / 8;
+      },
+      tipsWidth() {
+        return this.width / 2;
+      },
+      tipsLeft() {
+        return this.width / 4;
+      },
+      tipsTop() {
+        return this.height / 2 - this.height / 8;
+      },
     },
     beforeCreate() {
       console.log("生命周期-->beforeCreate");
@@ -254,6 +295,10 @@
         });
         //滑轮事件
         $(this.$refs.container).bind('mousewheel DOMMouseScroll', function (event) { //on也可以 bind监听
+          if (_this.isLockProp!== 0){
+            return;
+          }
+
           if (_this.direction === 1) {
             //Chorme
             let wheel = event.originalEvent.wheelDelta;
@@ -315,12 +360,35 @@
 
     },
     methods: {
+      //需要花云谱币购买回调
+      handleBuyClick(){
+        this.$emit("onPlayerBuyClick")
+      },
+      //点击VIP回调
+      handleVIPClick(){
+        this.$emit("onPlayerVIPClick")
+      },
+      //点击登录回调
+      handleLoginClick(){
+        this.$emit("onPlayerLoginClick")
+      },
+      //点击更多按钮回调
+      onMoreClick(){
+        this.$emit("onPlayerMorelick")
+      },
       handlePrePage(){
+        if (this.isLockProp !== 0) {
+          return;
+        }
         this.prePage();
       },
       handleNextPage(){
+        if (this.isLockProp !== 0) {
+          return;
+        }
         this.nextPage();
       },
+
       onControllerProgressChanged(progress) {
         //progress为百分比
         console.log("onProgressChanged-->" + progress);
@@ -499,7 +567,7 @@
         if (scoreScreenContainer === null)
           scoreScreenContainer = new createjs.Container();
         if (loadObj === null)
-          loadObj = this.createLoading((stageWidth) / 4, (stageHeight) / 4);
+          //loadObj = this.createLoading((stageWidth) / 4, (stageHeight) / 4);
 
         createjs.Touch.enable(stage);
         createjs.Ticker.framerate = 60;
@@ -734,7 +802,7 @@
         stage.removeAllEventListeners();
         stage.addChild(scoreScreenContainer);
         stage.addChild(uiContainer);
-        stage.addChild(loadObj.loadingConteiner);
+        //stage.addChild(loadObj.loadingConteiner);
         scoreContainer.removeAllChildren();
         uiContainer.removeAllChildren();
         playContainer.removeAllChildren();
@@ -761,7 +829,7 @@
           scoreImgWidthOnScreen = stageWidth * (1 - ls - rs);
         }
         // 初始化左右翻页按钮
-        const leftBtn = this.createButtonSprite(this.assets.leftImgPath, this.assets.leftPressImgPath, this.assets.leftPressImgPath, 128, 128);
+        /*const leftBtn = this.createButtonSprite(this.assets.leftImgPath, this.assets.leftPressImgPath, this.assets.leftPressImgPath, 128, 128);
         leftBtn.addEventListener('click', function (event) {
           _this.prePage()
         });
@@ -772,13 +840,22 @@
           _this.nextPage()
         });
         rightBtn.x = stageWidth - 128;
-        rightBtn.y = (stageHeight - 64) / 2;
+        rightBtn.y = (stageHeight - 64) / 2;*/
 
         // 加载乐谱图片
         //console.log(images);
         //console.log(pageNum);
         for (let x = 0; x < pageNum; x++) {
-          this.putScoreToStage(x + 1, images['scoreImg' + x])
+          if (_this.isLockProp !== 0) {
+            if (x > 0) {
+              this.putScoreToStage(x + 1, images['scoreImg' + x],true);
+            }else {
+              this.putScoreToStage(x + 1, images['scoreImg' + x],false);
+            }
+          }else {
+            this.putScoreToStage(x + 1, images['scoreImg' + x],false);
+          }
+
         }
         scoreScreenContainer.x = ls * stageWidth;
 
@@ -806,11 +883,11 @@
           pressX = 0
         });
         //两边的半透明遮罩
-        if (_this.direction === 0) {
+        /*if (_this.direction === 0) {
           uiContainer.addChild(_this.createRect(bgColor, 0.8, 0, 0, ls * stageWidth, stageHeight));
           uiContainer.addChild(_this.createRect(bgColor, 0.8, stageWidth - ls * stageWidth, 0, ls * stageWidth, stageHeight));
 
-        }
+        }*/
         //创建弹幕UI
         barrange = this.createBarrange();
 
@@ -913,14 +990,18 @@
               isChangePage = false;
               currentPage++;
               scoreCallback({type: 'onNextPage', value: currentPage});
-              uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              }
             })
           } else if (this.direction === 1) {
             createjs.Tween.get(scoreContainer).to({y: -currentPage * scoreImgHeightOnScreen}, 500).call(function () {
               isChangePage = false;
               currentPage++;
               scoreCallback({type: 'onNextPage', value: currentPage});
-              uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              }
             })
           }
 
@@ -938,14 +1019,18 @@
               isChangePage = false;
               currentPage--;
               scoreCallback({type: 'onPrePage', value: currentPage});
-              uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              }
             })
           } else if (this.direction === 1) {
             createjs.Tween.get(scoreContainer).to({y: -(currentPage - 2) * scoreImgHeightOnScreen}, 500).call(function () {
               isChangePage = false;
               currentPage--;
               scoreCallback({type: 'onPrePage', value: currentPage});
-              uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              }
             })
           }
 
@@ -956,19 +1041,21 @@
           isChangePage = true;
           if (this.direction === 0) {
             createjs.Tween.get(scoreContainer).to({x: -(page - 1) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
-              isChangePage = false
-              currentPage = page
+              isChangePage = false;
+              currentPage = page;
               scoreCallback({type: 'onChangePage', value: currentPage});
-              if (uiContainer !== null)
+              if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null){
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              }
             });
           } else if (this.direction === 1) {
             createjs.Tween.get(scoreContainer).to({y: -(page - 1) * scoreImgHeightOnScreen}, 500).call(function () {
-              isChangePage = false
-              currentPage = page
+              isChangePage = false;
+              currentPage = page;
               scoreCallback({type: 'onChangePage', value: currentPage});
-              if (uiContainer !== null)
+              if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+              }
             });
           }
 
@@ -978,15 +1065,19 @@
         if (this.direction === 0) {
           scoreContainer.x = -(page - 1) * (scoreImgWidthOnScreen + stageWidth * cs);
           scoreCallback({type: 'onChangePage', value: currentPage});
-          uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
+          if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null) {
+            uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
+          }
         } else if (this.direction === 1) {
           scoreContainer.y = -(page - 1) * scoreImgHeightOnScreen;
           scoreCallback({type: 'onChangePage', value: currentPage});
-          uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
+          if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null) {
+            uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
+          }
         }
 
       },
-      putScoreToStage(page, img) {
+      putScoreToStage(page, img, isLock) {
         let _this = this;
         let imgWidth;
         let imgHeight;
@@ -1011,6 +1102,10 @@
         c.height = imgHeight;
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, imgWidth, imgHeight);
+        if (isLock) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+          ctx.fillRect(0, 0, imgWidth, imgHeight);
+        }
         const bitmap1 = new createjs.Bitmap(c);
         bitmap1.x = imgPosX;
         bitmap1.y = imgPosY;
@@ -1255,9 +1350,20 @@
                       cursorContainer.addChild(shape);
                       if (_this.direction === 0) {
                         if (currentPage !== obj.page) {
+                          if (_this.isLockProp !== 0) {
+                            //限制播放
+                            _this.stopPlay();
+                            _this.showToast("试听结束",3000);
+                            return;
+                          }
                           _this.gotoPage(obj.page)
                         }
                       } else if (_this.direction === 1) {
+                        if (currentPage !== obj.page) {
+                          _this.stopPlay();
+                          _this.showToast("试听结束",3000);
+                          return;
+                        }
                         //判断光标是否在显示高度的多少范围之内，不在则下一屏
                         let top = -scoreContainer.y;
                         let bottom = -scoreContainer.y + stageHeight;
@@ -1501,6 +1607,14 @@
         }
         return result
       },
+      showToast(msg, timeLong){
+        let _this = this;
+        _this.toastMsg = msg;
+        _this.toastShow = true;
+        setTimeout(function () {
+          _this.toastShow = false;
+        },timeLong)
+      },
       checkFull() {
         return document.fullscreenElement ||
           document.msFullscreenElement ||
@@ -1622,6 +1736,21 @@
       soundInstance = null;
       loadObj = null;
       images = {};
+      /* 配置变量*/
+      isChangePage = false;
+      isAudioLoadComplete = false;
+      /* 实例变量*/
+      bitmapArr.splice(0, bitmapArr.length);
+      noteSeq.splice(0, noteSeq.length);
+      measureSeq.splice(0, measureSeq.length);
+      scoredata = null;
+      scoreCallback = null;
+      barrange = null;
+      /* 逻辑变量*/
+      currentPage = 1;
+      pageNum = 0;
+      ls = 0.1;
+      rs = 0.1;
       //createjs.Sound.removeAllSounds();
       createjs.Ticker.removeEventListener("tick", this.onFrame);
     }
@@ -1631,7 +1760,7 @@
 <style scoped>
 
   canvas {
-    background-color: #6f7180;
+    background-color: #FEF9E8;
   }
 
   #score-player {
@@ -1701,10 +1830,30 @@
   .bottom-mask:hover{
     opacity: 0.2;
   }
-  .icon{
+  .mask-icon{
     width: 20%;
     height: 100%;
     background-size: 20% 20%;
+  }
+  .login-tip{
+    color: white;
+    background-color: rgba(102,102,102,0.8);
+    padding: 10px 20px;
+    position: absolute;
+    border-radius: 20px;
+  }
+
+  .login-tip .login-btn{
+    cursor: pointer;
+    color: #8cc5ff;
+  }
+
+  .toast{
+    color: white;
+    background-color: rgba(102,102,102,0.8);
+    padding: 20px 20px;
+    position: absolute;
+    border-radius: 5px;
   }
 
 </style>
