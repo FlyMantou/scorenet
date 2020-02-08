@@ -26,11 +26,23 @@
     </div>
     <div v-show="isLoadComplete">
       <div class="hor-mask" v-show="isLoadComplete" :style="{width:width+'px', height:height+'px'}">
-        <div class="left-mask" @click="handlePrePage" :style="{width:width/6+'px', height:height+'px', left:'0px', top:'0px'}">
-          <svg t="1564555123085" class="mask-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2999"><path d="M254.890667 512L702.890667 64l60.416 60.330667-448 448L254.890667 512z m60.842666-60.757333l453.290667 453.376-60.330667 60.330666-453.376-453.376 60.416-60.330666z" p-id="3000" fill="#ffffff"></path></svg>
+        <div class="left-mask" @click="handlePrePage"
+             :style="{width:width/6+'px', height:height+'px', left:'0px', top:'0px'}">
+          <svg t="1564555123085" class="mask-icon" viewBox="0 0 1024 1024" version="1.1"
+               xmlns="http://www.w3.org/2000/svg" p-id="2999">
+            <path
+              d="M254.890667 512L702.890667 64l60.416 60.330667-448 448L254.890667 512z m60.842666-60.757333l453.290667 453.376-60.330667 60.330666-453.376-453.376 60.416-60.330666z"
+              p-id="3000" fill="#ffffff"></path>
+          </svg>
         </div>
-        <div class="right-mask" @click="handleNextPage" :style="{width:width/6+'px', height:height+'px', left:(5*width/6)+'px', top:'0px'}">
-          <svg t="1564555091300" class="mask-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2230"><path d="M769.11 512l-448 448-60.417-60.33 448-448L769.11 512z m-60.758 60.672L254.891 119.467l60.586-60.416 453.12 453.376-60.33 60.33z" p-id="2231" fill="#ffffff"></path></svg>
+        <div class="right-mask" @click="handleNextPage"
+             :style="{width:width/6+'px', height:height+'px', left:(5*width/6)+'px', top:'0px'}">
+          <svg t="1564555091300" class="mask-icon" viewBox="0 0 1024 1024" version="1.1"
+               xmlns="http://www.w3.org/2000/svg" p-id="2230">
+            <path
+              d="M769.11 512l-448 448-60.417-60.33 448-448L769.11 512z m-60.758 60.672L254.891 119.467l60.586-60.416 453.12 453.376-60.33 60.33z"
+              p-id="2231" fill="#ffffff"></path>
+          </svg>
         </div>
       </div>
     </div>
@@ -48,16 +60,20 @@
       <span :style="{color: '#666666',textAlign: 'center',width: '100%',fontSize: loadingConHeight/8+'px'}">加载资源</span>
     </div>
 
-    <div v-show="isLockProp===1" class="login-tip" :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
+    <div v-show="isLockProp===1" class="login-tip"
+         :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
       <span>此乐谱需登录才能完整查看，<a class="login-btn" @click="handleLoginClick()">立即登录</a></span>
     </div>
-    <div v-show="isLockProp===2" class="login-tip" :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
+    <div v-show="isLockProp===2" class="login-tip"
+         :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
       <span>此乐谱为VIP会员免费浏览，如需完整浏览，请<a class="login-btn" @click="handleVIPClick()">立即购买VIP会员</a></span>
     </div>
-    <div v-show="isLockProp===3" class="login-tip" :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
+    <div v-show="isLockProp===3" class="login-tip"
+         :style="{width: tipsWidth+'px',height:'auto',left:tipsLeft+'px',top:tipsTop+'px'}">
       <span>精品乐谱，免费播放前 1 页，如需完整播放请使用 {{priceProp}} 云谱币<a class="login-btn" @click="handleBuyClick()">兑换</a></span>
     </div>
-    <div v-show="toastShow" class="toast" :style="{width: toastWidth+'px',height:'auto',left:toastLeft+'px',top:toastTop+'px'}">
+    <div v-show="toastShow" class="toast"
+         :style="{width: toastWidth+'px',height:'auto',left:toastLeft+'px',top:toastTop+'px'}">
       <span>{{toastMsg}}</span>
     </div>
   </div>
@@ -80,7 +96,7 @@
   /* 配置变量*/
   let isChangePage = false;
   let isAudioLoadComplete = false;
-  let showAllCursor = true;
+  let showAllCursor = false;
   /* 实例变量*/
   let canvas;
   let stage = null;
@@ -157,7 +173,7 @@
       }
     },
     watch: {
-      isLockProp(val){
+      isLockProp(val) {
         //当限制条件发生变化时触发，解锁和加锁都必须重绘UI
         if (this.isLoadComplete) {
           this.initUI();
@@ -304,7 +320,7 @@
         });
         //滑轮事件
         $(this.$refs.container).bind('mousewheel DOMMouseScroll', function (event) { //on也可以 bind监听
-          if (_this.isLockProp!== 0){
+          if (_this.isLockProp !== 0) {
             return;
           }
 
@@ -370,28 +386,28 @@
     },
     methods: {
       //需要花云谱币购买回调
-      handleBuyClick(){
+      handleBuyClick() {
         this.$emit("onPlayerBuyClick")
       },
       //点击VIP回调
-      handleVIPClick(){
+      handleVIPClick() {
         this.$emit("onPlayerVIPClick")
       },
       //点击登录回调
-      handleLoginClick(){
+      handleLoginClick() {
         this.$emit("onPlayerLoginClick")
       },
       //点击更多按钮回调
-      onMoreClick(){
+      onMoreClick() {
         this.$emit("onPlayerMorelick")
       },
-      handlePrePage(){
+      handlePrePage() {
         if (this.isLockProp !== 0) {
           return;
         }
         this.prePage();
       },
-      handleNextPage(){
+      handleNextPage() {
         if (this.isLockProp !== 0) {
           return;
         }
@@ -504,7 +520,7 @@
         _this.initPlayer(function (event) {
           if (event.type === 'onImgLoadProgress') { // 乐谱图片加载进度
             const progress = event.value * 100;
-            _this.updateLoadingProgress(progress/100);
+            _this.updateLoadingProgress(progress / 100);
           } else if (event.type === 'onImgLoadComplete') { // 乐谱图片加载完成
 
           } else if (event.type === 'onAudioLoadComplete') { // 音频加载完成
@@ -513,7 +529,7 @@
             _this.timeText = ('00:00 / ' + _this.formatTime(soundInstance.duration / 1000));
           } else if (event.type === 'onInitUiComplete') { // 初始化UI完成
             if (cursorPlayer) {
-              if (showAllCursor){
+              if (showAllCursor) {
                 cursorPlayer.showAllCursor();
               }
             }
@@ -578,9 +594,9 @@
         if (scoreScreenContainer === null)
           scoreScreenContainer = new createjs.Container();
         if (loadObj === null)
-          //loadObj = this.createLoading((stageWidth) / 4, (stageHeight) / 4);
+        //loadObj = this.createLoading((stageWidth) / 4, (stageHeight) / 4);
 
-        createjs.Touch.enable(stage);
+          createjs.Touch.enable(stage);
         createjs.Ticker.framerate = 60;
         createjs.Ticker.addEventListener('tick', this.onFrame)
         // this.loadImageResource()
@@ -661,9 +677,9 @@
           cursorData.pageWidth = this.transInt2(bytes[9], bytes[10]);
           cursorData.pageHeight = this.transInt2(bytes[11], bytes[12]);
           if (bytes[headLen + 7] === 78 && bytes[headLen + 8] === 79 && bytes[headLen + 9] === 84 && bytes[headLen + 10] === 69) {
-            const noteLen = this.transInt2(bytes[headLen + 11], bytes[headLen + 12]);
-            const noteNum = this.transInt2(bytes[headLen + 13], bytes[headLen + 14]);
-            let noteStartIndex = headLen + 15;
+            const noteLen = this.transInt4(bytes[headLen + 11], bytes[headLen + 12], bytes[headLen + 13], bytes[headLen + 14]);
+            const noteNum = this.transInt2(bytes[headLen + 15], bytes[headLen + 16]);
+            let noteStartIndex = headLen + 17;
             const noteStep = noteLen / noteNum;
             const notItemList = [];
             for (let x = 0; x < noteNum; x++) {
@@ -672,25 +688,26 @@
               noteItem.ms = this.transInt4(bytes[noteStartIndex + 4], bytes[noteStartIndex + 5], bytes[noteStartIndex + 6], bytes[noteStartIndex + 7]);
               noteItem.page = this.transInt2(bytes[noteStartIndex + 8], bytes[noteStartIndex + 9]);
               noteItem.system = this.transInt2(bytes[noteStartIndex + 10], bytes[noteStartIndex + 11]);
-              noteItem.measure = this.transInt2(bytes[noteStartIndex + 12], bytes[noteStartIndex + 13]);
-              noteItem.staff = this.transInt2(bytes[noteStartIndex + 14], bytes[noteStartIndex + 15]);
+              noteItem.part = this.transInt2(bytes[noteStartIndex + 12], bytes[noteStartIndex + 13]);
+              noteItem.measure = this.transInt2(bytes[noteStartIndex + 14], bytes[noteStartIndex + 15]);
+              noteItem.staff = this.transInt2(bytes[noteStartIndex + 16], bytes[noteStartIndex + 17]);
               noteItem.box = {
-                left: this.transInt2(bytes[noteStartIndex + 16], bytes[noteStartIndex + 17]),
-                top: this.transInt2(bytes[noteStartIndex + 18], bytes[noteStartIndex + 19]),
-                right: this.transInt2(bytes[noteStartIndex + 20], bytes[noteStartIndex + 21]),
-                bottom: this.transInt2(bytes[noteStartIndex + 22], bytes[noteStartIndex + 23])
+                left: this.transInt2(bytes[noteStartIndex + 18], bytes[noteStartIndex + 19]),
+                top: this.transInt2(bytes[noteStartIndex + 20], bytes[noteStartIndex + 21]),
+                right: this.transInt2(bytes[noteStartIndex + 22], bytes[noteStartIndex + 23]),
+                bottom: this.transInt2(bytes[noteStartIndex + 24], bytes[noteStartIndex + 25])
               };
-              noteItem.key = this.transInt2(bytes[noteStartIndex + 24], bytes[noteStartIndex + 25]);
-              noteItem.noteType = this.transInt2(bytes[noteStartIndex + 26], bytes[noteStartIndex + 27]);
-              noteItem.division = this.transInt2(bytes[noteStartIndex + 28], bytes[noteStartIndex + 29]);
+              noteItem.key = this.transInt2(bytes[noteStartIndex + 26], bytes[noteStartIndex + 27]);
+              noteItem.noteType = this.transInt2(bytes[noteStartIndex + 28], bytes[noteStartIndex + 29]);
+              noteItem.division = this.transInt2(bytes[noteStartIndex + 30], bytes[noteStartIndex + 31]);
               notItemList.push(noteItem);
               noteStartIndex += noteStep
             }
             cursorData.noteItemList = notItemList;
             if (bytes[noteStartIndex] === 77 && bytes[noteStartIndex + 1] === 69 && bytes[noteStartIndex + 2] === 65 && bytes[noteStartIndex + 3] === 83) {
-              const measureLen = this.transInt2(bytes[noteStartIndex + 4], bytes[noteStartIndex + 5]);
-              const measureNum = this.transInt2(bytes[noteStartIndex + 6], bytes[noteStartIndex + 7]);
-              let measureStartIndex = noteStartIndex + 8;
+              const measureLen = this.transInt4(bytes[noteStartIndex + 4], bytes[noteStartIndex + 5], bytes[noteStartIndex + 6], bytes[noteStartIndex + 7]);
+              const measureNum = this.transInt2(bytes[noteStartIndex + 8], bytes[noteStartIndex + 9]);
+              let measureStartIndex = noteStartIndex + 10;
               const measureStep = measureLen / measureNum;
               const measureItemList = [];
               for (let x = 0; x < measureNum; x++) {
@@ -699,12 +716,13 @@
                 measureItem.ms = this.transInt4(bytes[measureStartIndex + 4], bytes[measureStartIndex + 5], bytes[measureStartIndex + 6], bytes[measureStartIndex + 7]);
                 measureItem.page = this.transInt2(bytes[measureStartIndex + 8], bytes[measureStartIndex + 9]);
                 measureItem.system = this.transInt2(bytes[measureStartIndex + 10], bytes[measureStartIndex + 11]);
-                measureItem.measure = this.transInt2(bytes[measureStartIndex + 12], bytes[measureStartIndex + 13]);
+                measureItem.part = this.transInt2(bytes[measureStartIndex + 12], bytes[measureStartIndex + 13]);
+                measureItem.measure = this.transInt2(bytes[measureStartIndex + 14], bytes[measureStartIndex + 15]);
                 measureItem.box = {
-                  left: this.transInt2(bytes[measureStartIndex + 14], bytes[measureStartIndex + 15]),
-                  top: this.transInt2(bytes[measureStartIndex + 16], bytes[measureStartIndex + 17]),
-                  right: this.transInt2(bytes[measureStartIndex + 18], bytes[measureStartIndex + 19]),
-                  bottom: this.transInt2(bytes[measureStartIndex + 20], bytes[measureStartIndex + 21])
+                  left: this.transInt2(bytes[measureStartIndex + 16], bytes[measureStartIndex + 17]),
+                  top: this.transInt2(bytes[measureStartIndex + 18], bytes[measureStartIndex + 19]),
+                  right: this.transInt2(bytes[measureStartIndex + 20], bytes[measureStartIndex + 21]),
+                  bottom: this.transInt2(bytes[measureStartIndex + 22], bytes[measureStartIndex + 23])
                 };
                 measureItemList.push(measureItem);
                 measureStartIndex += measureStep;
@@ -767,6 +785,7 @@
         scoreCallback({type: 'onImgLoadProgress', value: event.progress});
       },
       onImgLoadComplete(event) {
+        console.log(images);
         scoreCallback({type: 'onImgLoadComplete', value: event});
         // 全部加载完成
         event.currentTarget.removeEventListener('fileload', this.onImgFileLoad);
@@ -863,12 +882,12 @@
         for (let x = 0; x < pageNum; x++) {
           if (_this.isLockProp !== 0) {
             if (x > 0) {
-              this.putScoreToStage(x + 1, images['scoreImg' + x],true);
-            }else {
-              this.putScoreToStage(x + 1, images['scoreImg' + x],false);
+              this.putScoreToStage(x + 1, images['scoreImg' + x], true);
+            } else {
+              this.putScoreToStage(x + 1, images['scoreImg' + x], false);
             }
-          }else {
-            this.putScoreToStage(x + 1, images['scoreImg' + x],false);
+          } else {
+            this.putScoreToStage(x + 1, images['scoreImg' + x], false);
           }
 
         }
@@ -1005,7 +1024,7 @@
               isChangePage = false;
               currentPage++;
               scoreCallback({type: 'onNextPage', value: currentPage});
-              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+              if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
               }
             })
@@ -1014,7 +1033,7 @@
               isChangePage = false;
               currentPage++;
               scoreCallback({type: 'onNextPage', value: currentPage});
-              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+              if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
               }
             })
@@ -1034,7 +1053,7 @@
               isChangePage = false;
               currentPage--;
               scoreCallback({type: 'onPrePage', value: currentPage});
-              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+              if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
               }
             })
@@ -1043,7 +1062,7 @@
               isChangePage = false;
               currentPage--;
               scoreCallback({type: 'onPrePage', value: currentPage});
-              if (uiContainer!=null&&uiContainer.getChildByName('pageText')!==null){
+              if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
               }
             })
@@ -1059,7 +1078,7 @@
               isChangePage = false;
               currentPage = page;
               scoreCallback({type: 'onChangePage', value: currentPage});
-              if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null){
+              if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
               }
             });
@@ -1068,7 +1087,7 @@
               isChangePage = false;
               currentPage = page;
               scoreCallback({type: 'onChangePage', value: currentPage});
-              if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null) {
+              if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
                 uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
               }
             });
@@ -1080,13 +1099,13 @@
         if (this.direction === 0) {
           scoreContainer.x = -(page - 1) * (scoreImgWidthOnScreen + stageWidth * cs);
           scoreCallback({type: 'onChangePage', value: currentPage});
-          if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null) {
+          if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
             uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
           }
         } else if (this.direction === 1) {
           scoreContainer.y = -(page - 1) * scoreImgHeightOnScreen;
           scoreCallback({type: 'onChangePage', value: currentPage});
-          if (uiContainer !== null&&uiContainer.getChildByName('pageText')!==null) {
+          if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
             uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
           }
         }
@@ -1134,7 +1153,8 @@
           const obj = {};
           obj.staff = item.staff;
           obj.ms = item.ms;
-          obj.page = item.page;
+          obj.page = item.page + 1;
+          obj.part = item.part;
           if (item.box) {
             obj.l = item.box.left;
             obj.r = item.box.right;
@@ -1156,16 +1176,21 @@
           const obj = {};
           obj.ms = item.ms;
           obj.system = item.system;
-          obj.page = item.page;
+          obj.page = item.page + 1;
+          obj.part = item.part;
           if (item.box) {
             obj.l = item.box.left;
             obj.r = item.box.right;
             obj.t = item.box.top;
             obj.b = item.box.bottom
           }
-
-          measureSeq[item.ms] = obj;
-
+          if (measureSeq[item.ms]) {
+            measureSeq[item.ms].push(obj)
+          } else {
+            const arr = [];
+            arr.push(obj);
+            measureSeq[item.ms] = arr
+          }
         }
 
         const noteTimeSeq = [];
@@ -1195,7 +1220,8 @@
         let isCursorPlay = false;
         let blueTick = 0, redTick = 0, measureTick = 0, currentMs = -1, nextMs = 0,
           startTime = 0, noteTimeIndex = 0, measureTimeIndex;
-
+        let partTickArr = {};
+        let measureTickArr = {};
         cursorPlayer.setType = function (t) {
           type = t;
           cursorPlayer.gotoMs(currentMs);
@@ -1251,7 +1277,6 @@
             redTick = -1;
             for (let x = 0; x < tempArr.length; x++) {
               let obj = tempArr[x];
-              console.log(obj);
               if (obj.staff === 1) {
                 blueTick = currentMs;
               } else if (obj.staff === 2) {
@@ -1321,8 +1346,8 @@
             let objArr = noteSeq[ms];
             for (let j = 0; j < objArr.length; j++) {
               let obj = objArr[j];
-              if (scoreContainer.getChildAt(obj.page)) {
-                const p = scoreContainer.getChildAt(obj.page);
+              if (scoreContainer.getChildAt(obj.page - 1)) {
+                const p = scoreContainer.getChildAt(obj.page - 1);
                 const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale, 0);
                 cursorContainer.addChild(shape);
               }
@@ -1332,8 +1357,8 @@
             //let ms = measureTimeSeq[i];
             let obj = scoredata.measureItemList[i];
             if (obj === undefined) continue;
-            if (scoreContainer.getChildAt(obj.page)) {
-              const p = scoreContainer.getChildAt(obj.page);
+            if (scoreContainer.getChildAt(obj.page - 1)) {
+              const p = scoreContainer.getChildAt(obj.page - 1);
               console.log("绘制");
               const shape = _this.createRoundRect('#e34121', 0.5, p.x + obj.box.left / scale, p.y + obj.box.top / scale, (obj.box.right - obj.box.left) / scale, (obj.box.bottom - obj.box.top) / scale, 0);
               cursorContainer.addChild(shape);
@@ -1354,52 +1379,58 @@
             const tempArr = noteSeq[ms];
             for (let x = 0; x < tempArr.length; x++) {
               const obj = tempArr[x];
-              if (obj.staff === 1) {
-                blueTick = ms
-              } else if (obj.staff === 2) {
-                redTick = ms
+              if (obj.l === obj.t === obj.r === obj.b === 0) {
+                return;
               }
+              if (partTickArr[obj.part]===undefined) {
+                partTickArr[obj.part] = {};
+              }
+              partTickArr[obj.part][obj.staff] = ms;
             }
-
-            if (noteSeq[blueTick]) { // 画蓝线框
-              const tempArr = noteSeq[blueTick];
-              for (let x = 0; x < tempArr.length; x++) {
-                const obj = tempArr[x];
-                const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
-
-                if (obj.staff === 1) {
-                  if (!cursorContainer.getChildByName('blueTick' + blueTick)) {
-                    if (scoreContainer.getChildAt(obj.page - 1)) {
-                      const p = scoreContainer.getChildAt(obj.page - 1);
-                      //+音符宽度的五分之一
-                      let offWidth = (obj.r - obj.l) / scale / 4;
-                      const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offWidth, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offWidth, offWidth / 2);
-                      shape.name = 'blueTick' + blueTick;
-                      cursorContainer.addChild(shape);
-                      if (_this.direction === 0) {
-                        if (currentPage !== obj.page) {
-                          if (_this.isLockProp !== 0) {
-                            //限制播放
-                            _this.stopPlay();
-                            _this.showToast("试听结束",3000);
-                            return;
+            for (let key in partTickArr) {
+              let staffArr = partTickArr[key];
+              for (let key1 in staffArr) {
+                let tick = staffArr[key1];
+                if (noteSeq[tick]) {
+                  const tempArr = noteSeq[tick];
+                  for (let x = 0; x < tempArr.length; x++) {
+                    const obj = tempArr[x];
+                    if (obj.part.toString()===key&&obj.staff.toString()===key1){
+                      const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
+                      if (!cursorContainer.getChildByName('tick' + obj.part + obj.staff + tick)) {
+                        if (scoreContainer.getChildAt(obj.page - 1)) {
+                          const p = scoreContainer.getChildAt(obj.page - 1);
+                          //+音符宽度的五分之一
+                          let offWidth = (obj.r - obj.l) / scale / 4;
+                          const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offWidth, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offWidth, offWidth / 2);
+                          shape.name = 'tick' + obj.part + obj.staff + tick;
+                          cursorContainer.addChild(shape);
+                          if (_this.direction === 0) {
+                            if (currentPage !== obj.page) {
+                              if (_this.isLockProp !== 0) {
+                                //限制播放
+                                _this.stopPlay();
+                                _this.showToast("试听结束", 3000);
+                                return;
+                              }
+                              _this.gotoPage(obj.page)
+                            }
+                          } else if (_this.direction === 1) {
+                            /*if (currentPage !== obj.page) {
+                              _this.stopPlay();
+                              _this.showToast("试听结束",3000);
+                              return;
+                            }*/
+                            //判断光标是否在显示高度的多少范围之内，不在则下一屏
+                            let top = -scoreContainer.y;
+                            let bottom = -scoreContainer.y + stageHeight;
+                            let objY = p.y + obj.t / scale;
+                            top = top + stageHeight * (1 - 0.8) / 2;
+                            bottom = bottom - stageHeight * (1 - 0.8) / 2;
+                            if (objY < top || objY > bottom) {
+                              _this.gotoYPointScreen(objY - stageHeight * (1 - 0.6) / 2);
+                            }
                           }
-                          _this.gotoPage(obj.page)
-                        }
-                      } else if (_this.direction === 1) {
-                        if (currentPage !== obj.page) {
-                          _this.stopPlay();
-                          _this.showToast("试听结束",3000);
-                          return;
-                        }
-                        //判断光标是否在显示高度的多少范围之内，不在则下一屏
-                        let top = -scoreContainer.y;
-                        let bottom = -scoreContainer.y + stageHeight;
-                        let objY = p.y + obj.t / scale;
-                        top = top + stageHeight * (1 - 0.7) / 2;
-                        bottom = bottom - stageHeight * (1 - 0.7) / 2;
-                        if (objY < top || objY > bottom) {
-                          _this.gotoYPointScreen(objY - stageHeight * (1 - 0.6) / 2);
                         }
                       }
                     }
@@ -1407,20 +1438,28 @@
                 }
               }
             }
-            if (noteSeq[redTick]) { // 画红线框
-              const tempArr = noteSeq[redTick];
-              for (let x = 0; x < tempArr.length; x++) {
-                const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
-                const obj = tempArr[x];
-                if (obj.staff === 2) {
-                  if (!cursorContainer.getChildByName('redTick' + redTick)) {
-                    if (scoreContainer.getChildAt(obj.page - 1)) {
+          } else if (measureSeq[ms] && type === 1) {//小节模式
+            console.log("小节模式")
+            cursorContainer.removeAllChildren();
+            let objArr = measureSeq[ms];
+           // console.log(objArr);
+            for (let i = 0; i < objArr.length; i++) {
+              let obj = objArr[i];
+              measureTickArr[obj.part] = ms;
+            }
+            for (const key in measureTickArr) {
+              let tick = measureTickArr[key];
+              let tmpArr = measureSeq[tick];
+              for (let i = 0; i < tmpArr.length; i++) {
+                let obj = tmpArr[i];
+                if (obj.part.toString()===key){
+                  const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
+                  if (!cursorContainer.getChildByName('measure' +obj.part+ tick)) {
+                    if (scoreContainer.getChildAt(obj.page - 1)) {//获取乐谱图片是否存在
                       const p = scoreContainer.getChildAt(obj.page - 1);
-                      let offWidth = (obj.r - obj.l) / scale / 4;
-                      const shape = _this.createRoundRect('#FF5151', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offWidth, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offWidth, offWidth / 2);
-                      //const shape = _this.createRect('#FF5151', 0.5, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale)
-                      shape.name = 'redTick' + redTick;
-                      cursorContainer.addChild(shape)
+                      const shape = _this.createRect('#00ffa7', 0.3, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale);
+                      shape.name = 'measure' +obj.part+ tick;
+                      cursorContainer.addChild(shape);
                       if (_this.direction === 0) {
                         if (currentPage !== obj.page) {
                           _this.gotoPage(obj.page)
@@ -1437,37 +1476,6 @@
                         }
                       }
                     }
-                  }
-                }
-              }
-            }
-          } else if (measureSeq[ms] && type === 1) {//小节模式
-            let obj = measureSeq[ms];
-            console.log("小节模式")
-            measureTick = ms;
-            const scale = scoredata.pageWidth / scoreImgWidthOnScreen;
-            if (!cursorContainer.getChildByName('measure' + measureTick)) {
-              cursorContainer.removeAllChildren();
-              console.log(obj);
-              console.log(obj.page);
-              if (scoreContainer.getChildAt(obj.page - 1)) {//获取乐谱图片是否存在
-                const p = scoreContainer.getChildAt(obj.page - 1);
-                const shape = _this.createRect('#00ffa7', 0.3, p.x + obj.l / scale, p.y + obj.t / scale, (obj.r - obj.l) / scale, (obj.b - obj.t) / scale);
-                shape.name = 'measure' + measureTick;
-                cursorContainer.addChild(shape);
-                if (_this.direction === 0) {
-                  if (currentPage !== obj.page) {
-                    _this.gotoPage(obj.page)
-                  }
-                } else if (_this.direction === 1) {
-                  //判断光标是否在显示高度的多少范围之内，不在则下一屏
-                  let top = -scoreContainer.y;
-                  let bottom = -scoreContainer.y + stageHeight;
-                  let objY = p.y + obj.t / scale;
-                  top = top + stageHeight * (1 - 0.7) / 2;
-                  bottom = bottom - stageHeight * (1 - 0.7) / 2;
-                  if (objY < top || objY > bottom) {
-                    _this.gotoYPointScreen(objY - stageHeight / 2);
                   }
                 }
               }
@@ -1563,7 +1571,6 @@
           createjs.Tween.get(text).to({x: -msgMaxWidth}, 8000).call(function () {
             rowSpaceBoolean[line] = true;
             obj.container.removeChild(text);
-            console.log('obj.container-->' + obj.container.numChildren)
           })
         }
 
@@ -1635,13 +1642,13 @@
         }
         return result
       },
-      showToast(msg, timeLong){
+      showToast(msg, timeLong) {
         let _this = this;
         _this.toastMsg = msg;
         _this.toastShow = true;
         setTimeout(function () {
           _this.toastShow = false;
-        },timeLong)
+        }, timeLong)
       },
       checkFull() {
         return document.fullscreenElement ||
@@ -1738,7 +1745,7 @@
         this.$el.parentNode.removeChild(this.$el);
       },
       updateLoadingProgress(val) {
-        this.progressWidth = this.loadingConWidth*val;
+        this.progressWidth = this.loadingConWidth * val;
       }
     },
     deactivated() {
@@ -1815,70 +1822,81 @@
     background-color: rgba(102, 102, 102, 0.5);
     background-clip: content-box;
   }
-  .hor-mask{
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  .ver-mask{
+
+  .hor-mask {
     position: absolute;
     top: 0;
     left: 0;
   }
 
-  .left-mask{
+  .ver-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .left-mask {
     background-color: black;
     opacity: 0;
     position: absolute;
   }
-  .left-mask:hover{
+
+  .left-mask:hover {
     opacity: 0.2;
   }
-  .right-mask{
+
+  .right-mask {
     background-color: black;
     opacity: 0;
     position: absolute;
   }
-  .right-mask:hover{
+
+  .right-mask:hover {
     opacity: 0.2;
   }
-  .top-mask{
+
+  .top-mask {
     background-color: black;
     opacity: 0;
     position: absolute;
   }
-  .top-mask:hover{
+
+  .top-mask:hover {
     opacity: 0.2;
   }
-  .bottom-mask{
+
+  .bottom-mask {
     background-color: black;
     opacity: 0;
     position: absolute;
   }
-  .bottom-mask:hover{
+
+  .bottom-mask:hover {
     opacity: 0.2;
   }
-  .mask-icon{
+
+  .mask-icon {
     width: 20%;
     height: 100%;
     background-size: 20% 20%;
   }
-  .login-tip{
+
+  .login-tip {
     color: white;
-    background-color: rgba(102,102,102,0.8);
+    background-color: rgba(102, 102, 102, 0.8);
     padding: 10px 20px;
     position: absolute;
     border-radius: 20px;
   }
 
-  .login-tip .login-btn{
+  .login-tip .login-btn {
     cursor: pointer;
     color: #8cc5ff;
   }
 
-  .toast{
+  .toast {
     color: white;
-    background-color: rgba(102,102,102,0.8);
+    background-color: rgba(102, 102, 102, 0.8);
     padding: 20px 20px;
     position: absolute;
     border-radius: 5px;
