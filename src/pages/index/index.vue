@@ -1,12 +1,12 @@
 <template>
     <el-container class="container" direction="vertical">
-      <el-header class="header">看谱吧</el-header>
+      <el-header class="header" height="10vh">乐谱部落</el-header>
       <el-main class="main">
         <score-item v-for="(item, index) in itemList" v-bind:key="index" class="score" :img_url="'http://yulindb.myhuanghai.com'+item.score.coverimagefilepath"
                     :score_name="item.score.scorename"
                     :score_id="item.score.id"></score-item>
       </el-main>
-      <el-footer class="footer">make by huanghai   1165441461@qq.com</el-footer>
+      <el-footer class="footer" height="6vh">一起谱写律动的青春！</el-footer>
     </el-container>
 
 </template>
@@ -68,22 +68,28 @@ export default {
   }
 .container{
   width: 100%;
+  height: 100%;
   text-align: center;
-  background-color: bisque;
-  height: auto;
+  background-image: url("../../assets/img/bg.png");
 }
 .header{
-  background-color: black;
-  height: 200px;
+  background-color: rgba(60, 60, 60, 0.65);
   color: white;
+  text-align: center;
+  line-height: 10vh;
+  font-size: 4vh;
 }
 .main{
-  width: 1000px;
+  width: 100vw;
   margin: 0 auto;
 }
+  .main::-webkit-scrollbar {
+    display: none;
+  }
 .footer{
-  background-color: black;
+  background-color: rgba(60, 60, 60, 0.65);
   color: white;
-  height: 200px;
+  line-height: 6vh;
+  font-size: 2vh;
 }
 </style>

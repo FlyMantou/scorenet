@@ -8,12 +8,14 @@ export function getScoreList() {
   })
 }
 export function getScoreById(id) {
-  const data = {id}
+  const data = {id};
   return request({
-    //url: '/scs/api/getone',
-    url: 'http://yulindb.myhuanghai.com/score.json',
+    url: '/scs/api/getone',
+    //url: 'http://yulindb.myhuanghai.com/score.json',
     method: 'get',
-    data
+    params: {
+      id: id,
+    }
   })
 }
 export function parse(xmlpath,midpath) {
