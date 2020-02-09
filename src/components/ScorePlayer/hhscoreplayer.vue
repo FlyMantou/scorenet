@@ -14,6 +14,8 @@
         :direction-state-value="direction"
         :page-per-state-value="pagePer"
         :cursor-state-value="cursorState"
+        :page-num="pageNum"
+        :current-page-num="currentPage"
         @onProgressChanged="onControllerProgressChanged"
         @onPlayStateChanged="onControllerPlayStateChanged"
         @onStop="onControllerStop"
@@ -76,6 +78,7 @@
          :style="{width: toastWidth+'px',height:'auto',left:toastLeft+'px',top:toastTop+'px'}">
       <span>{{toastMsg}}</span>
     </div>
+
   </div>
 </template>
 
@@ -116,8 +119,6 @@
   let cursorContainer = null;
   let cursorPlayer = null;
   /* 逻辑变量*/
-  let currentPage = 1;
-  let pageNum = 0;
   let initStageWidth;
   let initStageHeight;
   let stageWidth;
@@ -164,6 +165,8 @@
         mountLock: false,
         toastShow: false,
         toastMsg: '提示',
+        pageNum: 0,
+        currentPage: 1,
         assets: {
           leftImgPath: leftImgImport,
           leftPressImgPath: leftPressImgImport,
@@ -610,8 +613,8 @@
           return;
         }
         _this.isLoadComplete = false;
-        pageNum = 0;
-        currentPage = 1;
+        _this.pageNum = 0;
+        _this.currentPage = 1;
         console.log('loadImageResource');
         const imgArr = _this.imgPathProp;
         const loader = new createjs.LoadQueue(true);// 这里一共可以是3个参数 第一个是是否用XHR模式加载 第二个是基础路径  第三个是跨域
@@ -621,7 +624,7 @@
 
         const loadArr = [];
         for (let x = 0; x < imgArr.length; x++) {
-          pageNum++;
+          _this.pageNum++;
           loadArr.push({src: imgArr[x], id: 'scoreImg' + x})
         }
         console.log(loadArr);
@@ -879,7 +882,7 @@
         // 加载乐谱图片
         //console.log(images);
         //console.log(pageNum);
-        for (let x = 0; x < pageNum; x++) {
+        for (let x = 0; x < _this.pageNum; x++) {
           if (_this.isLockProp !== 0) {
             if (x > 0) {
               this.putScoreToStage(x + 1, images['scoreImg' + x], true);
@@ -935,7 +938,7 @@
         uiContainer.addChild(pageText);
 
         //换页
-        this.changePage(currentPage);
+        this.changePage(_this.currentPage);
         cursorContainer.name = 'cursor';
         scoreContainer.addChild(cursorContainer);
 
@@ -1002,39 +1005,40 @@
         }
       },
       pauseAudio() {
-        console.log('this.pauseAudio')
+        console.log('this.pauseAudio');
         if (isAudioLoadComplete) {
-          soundInstance.paused = true
-          this.isPlay = false
+          soundInstance.paused = true;
+          this.isPlay = false;
           if (cursorPlayer) {
-            cursorPlayer.stopPlay()
+            cursorPlayer.stopPlay();
           }
           scoreCallback({type: 'onAudioPause', value: soundInstance})
         }
       },
       nextPage() {
-        if (currentPage >= pageNum) {
+        let _this = this;
+        if (_this.currentPage >= _this.pageNum) {
           return;
         }
-        console.log("currentPage-->" + currentPage);
+        console.log("currentPage-->" + _this.currentPage);
         if (!isChangePage) {
           isChangePage = true;
-          if (this.direction === 0) {
-            createjs.Tween.get(scoreContainer).to({x: -(currentPage) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
+          if (_this.direction === 0) {
+            createjs.Tween.get(scoreContainer).to({x: -(_this.currentPage) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
               isChangePage = false;
-              currentPage++;
-              scoreCallback({type: 'onNextPage', value: currentPage});
+              _this.currentPage++;
+              scoreCallback({type: 'onNextPage', value: _this.currentPage});
               if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
-                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+                uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum
               }
             })
-          } else if (this.direction === 1) {
-            createjs.Tween.get(scoreContainer).to({y: -currentPage * scoreImgHeightOnScreen}, 500).call(function () {
+          } else if (_this.direction === 1) {
+            createjs.Tween.get(scoreContainer).to({y: -_this.currentPage * scoreImgHeightOnScreen}, 500).call(function () {
               isChangePage = false;
-              currentPage++;
-              scoreCallback({type: 'onNextPage', value: currentPage});
+              _this.currentPage++;
+              scoreCallback({type: 'onNextPage', value: _this.currentPage});
               if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
-                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+                uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum
               }
             })
           }
@@ -1042,28 +1046,29 @@
         }
       },
       prePage() {
-        if (currentPage <= 1) {
+        let _this = this;
+        if (_this.currentPage <= 1) {
           return;
         }
-        console.log("currentPage-->" + currentPage);
+        console.log("currentPage-->" + _this.currentPage);
         if (!isChangePage) {
           isChangePage = true;
-          if (this.direction === 0) {
-            createjs.Tween.get(scoreContainer).to({x: -(currentPage - 2) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
+          if (_this.direction === 0) {
+            createjs.Tween.get(scoreContainer).to({x: -(_this.currentPage - 2) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
               isChangePage = false;
-              currentPage--;
-              scoreCallback({type: 'onPrePage', value: currentPage});
+              _this.currentPage--;
+              scoreCallback({type: 'onPrePage', value: _this.currentPage});
               if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
-                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+                uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum
               }
             })
-          } else if (this.direction === 1) {
-            createjs.Tween.get(scoreContainer).to({y: -(currentPage - 2) * scoreImgHeightOnScreen}, 500).call(function () {
+          } else if (_this.direction === 1) {
+            createjs.Tween.get(scoreContainer).to({y: -(_this.currentPage - 2) * scoreImgHeightOnScreen}, 500).call(function () {
               isChangePage = false;
-              currentPage--;
-              scoreCallback({type: 'onPrePage', value: currentPage});
+              _this.currentPage--;
+              scoreCallback({type: 'onPrePage', value: _this.currentPage});
               if (uiContainer != null && uiContainer.getChildByName('pageText') !== null) {
-                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+                uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum
               }
             })
           }
@@ -1071,24 +1076,25 @@
         }
       },
       gotoPage(page) {
+        let _this = this;
         if (!isChangePage) {
           isChangePage = true;
-          if (this.direction === 0) {
+          if (_this.direction === 0) {
             createjs.Tween.get(scoreContainer).to({x: -(page - 1) * (scoreImgWidthOnScreen + stageWidth * cs)}, 500).call(function () {
               isChangePage = false;
-              currentPage = page;
-              scoreCallback({type: 'onChangePage', value: currentPage});
+              _this.currentPage = page;
+              scoreCallback({type: 'onChangePage', value: _this.currentPage});
               if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
-                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+                uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum
               }
             });
           } else if (this.direction === 1) {
             createjs.Tween.get(scoreContainer).to({y: -(page - 1) * scoreImgHeightOnScreen}, 500).call(function () {
               isChangePage = false;
-              currentPage = page;
-              scoreCallback({type: 'onChangePage', value: currentPage});
+              _this.currentPage = page;
+              scoreCallback({type: 'onChangePage', value: _this.currentPage});
               if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
-                uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum
+                uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum
               }
             });
           }
@@ -1096,17 +1102,18 @@
         }
       },
       changePage(page) {
-        if (this.direction === 0) {
+        let _this = this;
+        if (_this.direction === 0) {
           scoreContainer.x = -(page - 1) * (scoreImgWidthOnScreen + stageWidth * cs);
-          scoreCallback({type: 'onChangePage', value: currentPage});
+          scoreCallback({type: 'onChangePage', value: _this.currentPage});
           if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
-            uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
+            uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum;
           }
-        } else if (this.direction === 1) {
+        } else if (_this.direction === 1) {
           scoreContainer.y = -(page - 1) * scoreImgHeightOnScreen;
-          scoreCallback({type: 'onChangePage', value: currentPage});
+          scoreCallback({type: 'onChangePage', value: _this.currentPage});
           if (uiContainer !== null && uiContainer.getChildByName('pageText') !== null) {
-            uiContainer.getChildByName('pageText').text = currentPage + '/' + pageNum;
+            uiContainer.getChildByName('pageText').text = _this.currentPage + '/' + _this.pageNum;
           }
         }
 
@@ -1375,7 +1382,6 @@
           if (showAllCursor)
             return;
           if (noteSeq[ms] && type === 0) {
-            cursorContainer.removeAllChildren();
             const tempArr = noteSeq[ms];
             for (let x = 0; x < tempArr.length; x++) {
               const obj = tempArr[x];
@@ -1387,6 +1393,7 @@
               }
               partTickArr[obj.part][obj.staff] = ms;
             }
+            cursorContainer.removeAllChildren();
             for (let key in partTickArr) {
               let staffArr = partTickArr[key];
               for (let key1 in staffArr) {
@@ -1400,13 +1407,16 @@
                       if (!cursorContainer.getChildByName('tick' + obj.part + obj.staff + tick)) {
                         if (scoreContainer.getChildAt(obj.page - 1)) {
                           const p = scoreContainer.getChildAt(obj.page - 1);
-                          //+音符宽度的五分之一
-                          let offWidth = (obj.r - obj.l) / scale / 4;
-                          const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offWidth, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offWidth, offWidth / 2);
+                          //设置边框偏移
+                          //let offWidth = (obj.r - obj.l) / scale / 4;
+                          let offWidth = 0;
+                          //let offHeight = 5/scale;
+                          let offHeight = 0;
+                          const shape = _this.createRoundRect('#0072E3', 0.5, p.x + obj.l / scale - offWidth, p.y + obj.t / scale - offHeight, (obj.r - obj.l) / scale + offWidth, (obj.b - obj.t) / scale + offHeight, offWidth / 2);
                           shape.name = 'tick' + obj.part + obj.staff + tick;
                           cursorContainer.addChild(shape);
-                          if (_this.direction === 0) {
-                            if (currentPage !== obj.page) {
+                          if (_this.direction === 0) {//横屏
+                            if (_this.currentPage !== obj.page) {
                               if (_this.isLockProp !== 0) {
                                 //限制播放
                                 _this.stopPlay();
@@ -1415,20 +1425,42 @@
                               }
                               _this.gotoPage(obj.page)
                             }
-                          } else if (_this.direction === 1) {
-                            /*if (currentPage !== obj.page) {
+                          } else if (_this.direction === 1) {//竖屏
+                            /*if (_this.currentPage !== obj.page) {
                               _this.stopPlay();
                               _this.showToast("试听结束",3000);
                               return;
                             }*/
                             //判断光标是否在显示高度的多少范围之内，不在则下一屏
+                            //console.log("maxY-->"+maxY);
+                            let minY = 0;//用于计算所有当前时间戳的定位块的中心y位置，用于滚屏
+                            let maxY = 0;//用于计算所有当前时间戳的定位块的中心y位置，用于滚屏
+                            for (let i = 0; i < cursorContainer.children.length; i++) {
+                              let y = cursorContainer.children[i].graphics.command.y;
+                              let h = cursorContainer.children[i].graphics.command.h;
+                              if (y===0||h===0){
+                                continue;
+                              }
+                              if (minY===0){
+                                minY = y;
+                              } else {
+                                minY = minY > y?y:minY;
+                              }
+                              if (maxY===0){
+                                maxY = y+h;
+                              } else {
+                                maxY = maxY < (y+h)?(y+h):minY;
+                              }
+                            }
+                            let centerY = minY+(maxY-minY)/2;
+                            if (centerY===0) continue;
                             let top = -scoreContainer.y;
                             let bottom = -scoreContainer.y + stageHeight;
-                            let objY = p.y + obj.t / scale;
+                            let objY = centerY;
                             top = top + stageHeight * (1 - 0.8) / 2;
                             bottom = bottom - stageHeight * (1 - 0.8) / 2;
                             if (objY < top || objY > bottom) {
-                              _this.gotoYPointScreen(objY - stageHeight * (1 - 0.6) / 2);
+                              _this.gotoYPointScreen(objY-stageHeight/2);
                             }
                           }
                         }
@@ -1439,7 +1471,7 @@
               }
             }
           } else if (measureSeq[ms] && type === 1) {//小节模式
-            console.log("小节模式")
+            console.log("小节模式");
             cursorContainer.removeAllChildren();
             let objArr = measureSeq[ms];
            // console.log(objArr);
@@ -1461,7 +1493,7 @@
                       shape.name = 'measure' +obj.part+ tick;
                       cursorContainer.addChild(shape);
                       if (_this.direction === 0) {
-                        if (currentPage !== obj.page) {
+                        if (_this.currentPage !== obj.page) {
                           _this.gotoPage(obj.page)
                         }
                       } else if (_this.direction === 1) {
@@ -1486,10 +1518,13 @@
         return cursorPlayer
       },
       gotoYPointScreen(pointY) {
+        let _this = this;
         if (!isChangePage) {
           isChangePage = true;
           createjs.Tween.get(scoreContainer).to({y: -pointY}, 500).call(function () {
             isChangePage = false;
+            let centerY = (pointY+stageHeight/2);
+            _this.currentPage = (Math.floor(centerY/scoreImgHeightOnScreen)+1);
           });
         }
       },
@@ -1782,8 +1817,8 @@
       scoreCallback = null;
       barrange = null;
       /* 逻辑变量*/
-      currentPage = 1;
-      pageNum = 0;
+      this.currentPage = 1;
+      this.pageNum = 0;
       ls = 0.1;
       rs = 0.1;
       //createjs.Sound.removeAllSounds();

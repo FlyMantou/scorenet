@@ -39,37 +39,9 @@
       console.log(this.$route.params.id)
       //this.getData();
       const pngFiles = [];
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/1.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/2.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/3.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/4.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/5.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      /*pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/6.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/7.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/8.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/9.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/10.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/11.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/12.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/13.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/14.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/15.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/16.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/17.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/18.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/19.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/20.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/21.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/22.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/23.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/24.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/25.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/26.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))*/
-     // pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/7.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      //pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/8.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-      //pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/9.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-     // pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/10.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
-     // pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/11.png?x-oss-process=style/test1').replace(/\+/g, '%2B'))
+      for (let i = 0; i < 10; i++) {
+        pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/parse/'+(i+1)+'.png?x-oss-process=style/test1').replace(/\+/g, '%2B'));
+      }
       //pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/score/36/34/千里之外_0001.png?x-oss-process=style/test1').replace(/\+/g, '%2B'));
       //pngFiles.push(encodeURI('https://ypk-user-upload.oss-cn-hangzhou.aliyuncs.com/sheet_files/74ff42c0-d2ae-11e9-9d90-85055167b993.png').replace(/\+/g, '%2B'));
       //pngFiles.push(encodeURI('http://yulindb.myhuanghai.com/score/36/34/千里之外_0002.png?x-oss-process=style/test1').replace(/\+/g, '%2B'));
