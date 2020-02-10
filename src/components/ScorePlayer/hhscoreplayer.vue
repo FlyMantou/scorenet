@@ -1,6 +1,6 @@
 <template>
   <div ref="container" id="score-player" :style="{width:width+'px', height:height+'px'}">
-    <canvas id="canvas" ref="canvas"></canvas>
+    <canvas v-show="isLoadComplete" id="canvas" ref="canvas"></canvas>
     <div style="position: absolute;bottom: 0">
       <HHScoreController
         :current-progress="currentProgress"
@@ -16,6 +16,7 @@
         :cursor-state-value="cursorState"
         :page-num="pageNum"
         :current-page-num="currentPage"
+        :mobile="mobile"
         @onProgressChanged="onControllerProgressChanged"
         @onPlayStateChanged="onControllerPlayStateChanged"
         @onStop="onControllerStop"
@@ -167,6 +168,7 @@
         toastMsg: '提示',
         pageNum: 0,
         currentPage: 1,
+        mobile: false,
         assets: {
           leftImgPath: leftImgImport,
           leftPressImgPath: leftPressImgImport,
@@ -291,6 +293,8 @@
     mounted() {
       if (!this.mountLock) {
         this.mountLock = true;
+        //如果是手机模式，指定默认竖屏，并且横屏模式下只能显示一页
+        this.mobile = this._isMobile();
         console.log("生命周期-->mounted");
         const _this = this;
         canvas = this.$refs.canvas;
@@ -388,6 +392,10 @@
 
     },
     methods: {
+      _isMobile() {
+        let m = (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i));
+        return m!==undefined&&m!=null&&m.length>0;
+      },
       //需要花云谱币购买回调
       handleBuyClick() {
         this.$emit("onPlayerBuyClick")
@@ -520,6 +528,10 @@
         let _this = this;
         //判断是否需要自动适应
         _this.checkAutoDirection();
+        if (_this.mobile){
+          _this.direction = 1;
+          _this.pagePer = 1;
+        }
         _this.initPlayer(function (event) {
           if (event.type === 'onImgLoadProgress') { // 乐谱图片加载进度
             const progress = event.value * 100;
@@ -638,7 +650,7 @@
         this.audioLoadLock = true;//上锁，禁止同时调用
         console.log('loadMp3Resource');
         const audioPath = this.audioPathProp;
-        createjs.Sound.registerPlugins([createjs.HTMLAudioPlugin]);
+        createjs.Sound.registerPlugins([createjs.WebAudioPlugin, createjs.HTMLAudioPlugin]);
         createjs.Sound.alternateExtensions = ['mp3'];
         createjs.Sound.on('fileload', this.onAudioLoadComplete);
         createjs.Sound.registerSound(audioPath, 'sound', 3);
@@ -808,7 +820,9 @@
           //soundInstance = createjs.Sound.play('sound', { interrupt: createjs.Sound.INTERRUPT_ANY, loop: -1 })
           //soundInstance.paused = true
         }
-        this.timeText = '00:00 / ' + this.formatTime(soundInstance.duration / 1000);
+       // this.showToast("音频加载完成-->"+soundInstance,3000);
+
+        _this.timeText = '00:00 / ' + _this.formatTime(soundInstance.duration / 1000);
 
         soundInstance.on('complete', function (event) {
           soundInstance.paused = true;
@@ -1836,6 +1850,7 @@
   #score-player {
     position: relative;
     /*overflow: hidden;*/
+    background-color: #FEF9E8;
     margin: auto
   }
 

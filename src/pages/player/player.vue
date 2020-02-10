@@ -33,7 +33,7 @@
         audioPath: '',//要加载的音频地址，仅支持mp3文件
         cursorPath: '',//要加载的光标文件地址，编码后的光标文件
         playerWidth: 1000,//自定义播放器宽度
-        playerHeight: 600,//自定义播放器高度
+        playerHeight: 800,//自定义播放器高度
         directionTemp: 0,//自定义横版还是竖版显示，只有当autoDirection为false的时候生效
         page: 2,//自定义横版展示页面数，只有当autoDirection为false的时候生效
         autoDirection: true,//自动根据宽高设置版式
@@ -56,6 +56,8 @@
       let cursorPath = encodeURI('http://yulindb.myhuanghai.com/parse/1.cur').replace(/\+/g, '%2B');
       //let cursorPath = encodeURI('http://yulindb.oss-cn-beijing.aliyuncs.com/score/36/34/song.cur').replace(/\+/g, '%2B');
       this.initScorePlayerData(pngFiles,"http://yulindb.myhuanghai.com/parse/1.mp3",cursorPath)*/
+      this.playerWidth = document.documentElement.clientWidth * 0.98;
+      this.playerHeight = document.documentElement.clientHeight * 0.9-0.02*document.documentElement.clientWidth;
       this.getData();
     },
     methods: {
@@ -106,13 +108,12 @@
   .header{
     height: 10vh;
     background-color: rgba(25, 25, 25, 0.58);
-    margin-bottom: 5vh;
     line-height: 10vh;
     font-size: 4vh;
     color: white;
   }
   .player{
-    border: 1vh rgba(0, 0, 0, 0.43) solid;
+    border: 1vw rgb(38, 67, 84) solid;
     box-sizing: content-box;
     left: 0;
     right: 0;

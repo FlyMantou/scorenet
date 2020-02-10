@@ -19,7 +19,7 @@ export default {
   text-align: center;
   width: 100%;
   height: 100%;
-  font-family: 'fz';
+  font-family: 'fz',serif;
 }
 html,body{
   height: 100%;

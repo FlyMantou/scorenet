@@ -1,5 +1,5 @@
 module.exports = {
   NODE_ENV: '"production"',
   ENV_CONFIG: '"prod"',
-  BASE_API: '"http://yuepu.myhuanghai.com"'
+  BASE_API: '"http://tomcat.myhuanghai.com"'
 }
